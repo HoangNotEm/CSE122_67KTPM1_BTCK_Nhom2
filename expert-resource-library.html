@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thư viện tài nguyên – CropMate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-role="expert" data-page="expert-resource-library.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Thư viện tài nguyên</h1>
+      <p>Quản lý bài viết, video và hướng dẫn để gắn kèm khi tư vấn cho nông hộ.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-add"></button>
+    </div>
+  </div>
+
+  <div data-tabs-scope>
+    <div class="tabs" data-tabs role="tablist" aria-label="Trạng thái tài nguyên">
+      <button type="button" class="tabs__btn is-active" data-tab="active" aria-selected="true">Đang hoạt động</button>
+      <button type="button" class="tabs__btn" data-tab="archived" aria-selected="false">Đã lưu trữ</button>
+    </div>
+
+    <div class="filter-bar" role="search">
+      <span class="filter-bar__search">
+        <input class="input" type="search" id="f-q" placeholder="Tìm theo tiêu đề, mô tả..." aria-label="Tìm kiếm tài nguyên">
+      </span>
+      <select class="select" id="f-type" aria-label="Lọc theo loại">
+        <option value="all">Tất cả loại</option>
+        <option value="Bài viết">Bài viết</option>
+        <option value="Video">Video</option>
+        <option value="Hướng dẫn">Hướng dẫn</option>
+      </select>
+      <select class="select" id="f-crop" aria-label="Lọc theo cây trồng"></select>
+      <select class="select" id="f-topic" aria-label="Lọc theo chủ đề"></select>
+      <span class="filter-bar__count" id="result-count"></span>
+    </div>
+
+    <div class="tab-pane is-active" data-pane="active">
+      <div class="grid grid--3" id="grid-active"></div>
+    </div>
+    <div class="tab-pane" data-pane="archived">
+      <div class="grid grid--3" id="grid-archived"></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/modules/ui.js"></script>
+<script src="js/modules/ai.js"></script>
+<script src="js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  if (!api.current()) return;
+
+  /* ---------- Dữ liệu nền ---------- */
+  const cropById = {};
+  api.read('crops').filter(function (c) { return c.status === 'active'; })
+    .forEach(function (c) { cropById[c.id] = c; });
+
+  const state = { tab: 'active', q: '', type: 'all', cropId: 'all', topic: 'all' };
+  let all = [];
+
+  const TYPE_ICON = { 'Bài viết': 'file', 'Video': 'eye', 'Hướng dẫn': 'book' };
+  document.getElementById('btn-add').innerHTML = ui.icon('plus') + ' Thêm tài nguyên';
+
+  /* ---------- Select cây trồng (tĩnh) ---------- */
+  document.getElementById('f-crop').innerHTML =
+    '<option value="all">Tất cả cây trồng</option>' +
+    Object.keys(cropById).map(function (id) {
+      return '<option value="' + id + '">' + ui.escapeHtml(cropById[id].name) + '</option>';
+    }).join('');
+
+  /* ---------- Tải dữ liệu chính ---------- */
+  async function loadResources() {
+    document.getElementById('grid-' + state.tab).innerHTML =
+      '<div class="skeleton skeleton--card"></div><div class="skeleton skeleton--card"></div><div class="skeleton skeleton--card"></div>';
+    try {
+      all = await api.list('resources');
+      buildTopicFilter();
+      render();
+    } catch (e) {
+      document.getElementById('grid-' + state.tab).innerHTML =
+        '<div class="card" style="grid-column:1/-1;">' + ui.errorState(e.message) + '</div>';
+      document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', loadResources); });
+    }
+  }
+
+  /* ---------- Select chủ đề (động) ---------- */
+  function buildTopicFilter() {
+    const topics = [];
+    all.forEach(function (r) {
+      if (r.topic && topics.indexOf(r.topic) < 0) topics.push(r.topic);
+    });
+    topics.sort();
+    document.getElementById('f-topic').innerHTML =
+      '<option value="all">Tất cả chủ đề</option>' +
+      topics.map(function (t) { return '<option value="' + ui.escapeHtml(t) + '">' + ui.escapeHtml(t) + '</option>'; }).join('');
+    if (topics.indexOf(state.topic) < 0) state.topic = 'all';
+  }
+
+  /* ---------- Lọc & render ---------- */
+  function truncate(s, n) {
+    s = String(s || '');
+    return s.length > n ? s.slice(0, n).trim() + '…' : s;
+  }
+
+  function filtered() {
+    const q = state.q.trim().toLowerCase();
+    return all.filter(function (r) {
+      if (r.status !== state.tab) return false;
+      if (state.type !== 'all' && r.type !== state.type) return false;
+      if (state.cropId !== 'all' && r.cropId !== state.cropId) return false;
+      if (state.topic !== 'all' && r.topic !== state.topic) return false;
+      if (q && (r.title + ' ' + (r.description || '')).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    const grid = document.getElementById('grid-' + state.tab);
+    const list = filtered();
+    document.getElementById('result-count').textContent = list.length + ' kết quả';
+
+    if (!list.length) {
+      grid.innerHTML = state.tab === 'active'
+        ? ui.emptyState({
+            icon: 'book', title: 'Chưa có tài nguyên nào',
+            desc: 'Thêm bài viết, video hoặc hướng dẫn đầu tiên để gắn kèm khi tư vấn cho nông hộ.',
+            action: '<button type="button" class="btn btn--primary" data-open-create>' + ui.icon('plus') + ' Thêm tài nguyên</button>'
+          })
+        : ui.emptyState({
+            icon: 'archive', title: 'Chưa có tài nguyên lưu trữ',
+            desc: 'Các tài nguyên bạn lưu trữ sẽ được giữ tại đây và có thể khôi phục lại bất cứ lúc nào.'
+          });
+      const cta = grid.querySelector('[data-open-create]');
+      if (cta) cta.addEventListener('click', function () { openResourceModal(null); });
+      return;
+    }
+
+    grid.innerHTML = list.map(function (r) {
+      const cropName = r.cropId && cropById[r.cropId] ? cropById[r.cropId].name : 'Chung';
+      const actions = state.tab === 'active'
+        ? '<button type="button" class="btn btn--secondary btn--sm" data-edit="' + r.id + '">' + ui.icon('edit') + ' Sửa</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-archive="' + r.id + '">' + ui.icon('archive') + ' Lưu trữ</button>'
+        : '<button type="button" class="btn btn--secondary btn--sm" data-edit="' + r.id + '">' + ui.icon('edit') + ' Sửa</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-restore="' + r.id + '">' + ui.icon('refresh') + ' Khôi phục</button>' +
+          '<button type="button" class="btn btn--danger-soft btn--sm" data-delete="' + r.id + '">' + ui.icon('trash') + ' Xóa vĩnh viễn</button>';
+
+      return '<article class="card" style="display:flex; flex-direction:column;">' +
+        '<div class="row row--between">' +
+          '<span class="stat__icon stat__icon--blue" style="width:38px; height:38px;">' + ui.icon(TYPE_ICON[r.type] || 'file') + '</span>' +
+          '<span class="tag">' + ui.escapeHtml(r.type) + '</span>' +
+        '</div>' +
+        '<strong style="margin-top:10px;">' + ui.escapeHtml(r.title) + '</strong>' +
+        '<div class="small muted" style="margin:6px 0 8px;">' +
+          ui.escapeHtml(cropName) + ' · <span class="tag">' + ui.escapeHtml(r.topic || '—') + '</span> · cập nhật ' + ui.fmtDate(r.updatedAt) +
+        '</div>' +
+        '<p class="small muted" style="flex:1; margin:0 0 10px;">' + ui.escapeHtml(truncate(r.description, 140)) + '</p>' +
+        '<a href="' + ui.escapeHtml(r.url || '#') + '" class="btn btn--ghost btn--sm" style="align-self:flex-start;">' + ui.icon('eye') + ' Xem nguồn</a>' +
+        '<hr class="divider" style="margin:12px 0 10px;">' +
+        '<div class="row">' + actions + '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---------- Hành động trên card (delegation) ---------- */
+  ['active', 'archived'].forEach(function (tab) {
+    document.getElementById('grid-' + tab).addEventListener('click', async function (e) {
+      const editBtn = e.target.closest('[data-edit]');
+      const archBtn = e.target.closest('[data-archive]');
+      const restBtn = e.target.closest('[data-restore]');
+      const delBtn = e.target.closest('[data-delete]');
+      try {
+        if (editBtn) {
+          const res = all.find(function (x) { return x.id === editBtn.getAttribute('data-edit'); });
+          if (res) openResourceModal(res);
+        } else if (archBtn) {
+          const ok = await ui.confirmModal({
+            title: 'Lưu trữ tài nguyên',
+            message: 'Tài nguyên sẽ chuyển sang mục "Đã lưu trữ" và không còn xuất hiện khi gắn kèm tư vấn. Bạn chắc chắn?',
+            okText: 'Lưu trữ'
+          });
+          if (ok) {
+            await api.update('resources', archBtn.getAttribute('data-archive'), { status: 'archived', updatedAt: ui.todayISO() });
+            ui.toast('Đã lưu trữ tài nguyên.', 'success');
+            loadResources();
+          }
+        } else if (restBtn) {
+          await api.update('resources', restBtn.getAttribute('data-restore'), { status: 'active', updatedAt: ui.todayISO() });
+          ui.toast('Đã khôi phục tài nguyên.', 'success');
+          loadResources();
+        } else if (delBtn) {
+          const ok = await ui.confirmModal({
+            title: 'Xóa vĩnh viễn',
+            message: 'Tài nguyên sẽ bị xóa hoàn toàn khỏi hệ thống và không thể khôi phục. Bạn chắc chắn?',
+            okText: 'Xóa vĩnh viễn', danger: true
+          });
+          if (ok) {
+            await api.remove('resources', delBtn.getAttribute('data-delete'));
+            ui.toast('Đã xóa tài nguyên vĩnh viễn.', 'success');
+            loadResources();
+          }
+        }
+      } catch (err) {
+        ui.toast(err.message, 'error');
+      }
+    });
+  });
+
+  /* ---------- Modal tạo / sửa (dùng chung) ---------- */
+  function openResourceModal(res) {
+    const isEdit = !!res;
+    const bd = ui.openModal({
+      title: isEdit ? 'Cập nhật tài nguyên' : 'Thêm tài nguyên',
+      size: 'lg',
+      body:
+        '<form id="resource-form" novalidate>' +
+          '<div class="field">' +
+            '<label class="field__label" for="res-title">Tiêu đề <span class="req">*</span></label>' +
+            '<input class="input" id="res-title" name="title" data-rules="required" value="' + (isEdit ? ui.escapeHtml(res.title) : '') + '" placeholder="VD: Sổ tay nhận diện bệnh đạo ôn trên lúa">' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="field">' +
+              '<label class="field__label" for="res-type">Loại <span class="req">*</span></label>' +
+              '<select class="select" id="res-type" name="type" data-rules="required">' +
+                ['Bài viết', 'Video', 'Hướng dẫn'].map(function (t) {
+                  return '<option value="' + t + '"' + (isEdit && res.type === t ? ' selected' : '') + '>' + t + '</option>';
+                }).join('') +
+              '</select>' +
+              '<div class="field__error"></div>' +
+            '</div>' +
+            '<div class="field">' +
+              '<label class="field__label" for="res-cropId">Cây trồng</label>' +
+              '<select class="select" id="res-cropId" name="cropId">' +
+                '<option value="">— Chung (không gắn cây) —</option>' +
+                Object.keys(cropById).map(function (id) {
+                  return '<option value="' + id + '"' + (isEdit && res.cropId === id ? ' selected' : '') + '>' + ui.escapeHtml(cropById[id].name) + '</option>';
+                }).join('') +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field__label" for="res-topic">Chủ đề <span class="req">*</span></label>' +
+            '<input class="input" id="res-topic" name="topic" data-rules="required" value="' + (isEdit ? ui.escapeHtml(res.topic || '') : '') + '" placeholder="VD: Sâu bệnh">' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field__label" for="res-description">Mô tả <span class="req">*</span></label>' +
+            '<textarea class="textarea" id="res-description" name="description" data-rules="required|min20" placeholder="Tóm tắt nội dung chính giúp nông dân/chuyên gia nắm nhanh...">' + (isEdit ? ui.escapeHtml(res.description || '') : '') + '</textarea>' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field__label" for="res-url">Đường dẫn nguồn</label>' +
+            '<input class="input" id="res-url" name="url" value="' + (isEdit ? ui.escapeHtml(res.url || '') : '') + '" placeholder="https://... (có thể bỏ trống)">' +
+            '<div class="field__hint">Để trống sẽ dùng liên kết giữ chỗ "#".</div>' +
+          '</div>' +
+        '</form>',
+      footer:
+        '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+        '<button type="button" class="btn btn--primary" data-save>' + ui.icon('check') + ' ' + (isEdit ? 'Lưu thay đổi' : 'Tạo tài nguyên') + '</button>'
+    });
+
+    const form = bd.querySelector('#resource-form');
+    ui.bindLiveValidation(form);
+    bd.querySelector('[data-save]').addEventListener('click', async function () {
+      if (!ui.validateForm(form)) return;
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      const data = ui.serializeForm(form);
+      const payload = {
+        title: data.title.trim(),
+        type: data.type,
+        cropId: data.cropId || null,
+        topic: data.topic.trim(),
+        description: data.description.trim(),
+        url: (data.url || '').trim() || '#',
+        updatedAt: ui.todayISO()
+      };
+      try {
+        if (isEdit) {
+          await api.update('resources', res.id, payload);
+          ui.toast('Đã cập nhật tài nguyên.', 'success');
+        } else {
+          await api.create('resources', Object.assign({ status: 'active' }, payload));
+          ui.toast('Đã thêm tài nguyên mới.', 'success');
+        }
+        ui.closeModal();
+        loadResources();
+      } catch (err) {
+        ui.toast(err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = ui.icon('check') + ' ' + (isEdit ? 'Lưu thay đổi' : 'Tạo tài nguyên');
+      }
+    });
+  }
+
+  document.getElementById('btn-add').addEventListener('click', function () { openResourceModal(null); });
+
+  /* ---------- Tabs & bộ lọc ---------- */
+  ui.initTabs(document);
+  document.querySelectorAll('.tabs__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.tab = btn.getAttribute('data-tab');
+      render();
+    });
+  });
+
+  document.getElementById('f-q').addEventListener('input', ui.debounce(function () {
+    state.q = this.value; render();
+  }, 250));
+  document.getElementById('f-type').addEventListener('change', function () {
+    state.type = this.value; render();
+  });
+  document.getElementById('f-crop').addEventListener('change', function () {
+    state.cropId = this.value; render();
+  });
+  document.getElementById('f-topic').addEventListener('change', function () {
+    state.topic = this.value; render();
+  });
+
+  loadResources();
+});
+</script>
+</body>
+</html>

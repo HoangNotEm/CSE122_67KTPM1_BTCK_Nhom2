@@ -1,0 +1,5 @@
+Dán link Figma/Canva của nhóm vào đây sau khi được duyệt:
+- Sơ đồ trang + luồng người dùng: <link>
+- Mockup desktop + responsive: <link>
+- Trạng thái loading/empty/error: <link>
+- Mockup tương tác AI: <link>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập – CropMate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="public-page">
+  <nav class="public-nav" aria-label="Điều hướng chính">
+    <a class="brand" href="index.html"><span class="brand__logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span><span>CropMate AI</span></a>
+    <div class="public-nav__links">
+      <a href="index.html">Trang chủ</a>
+      <a href="register.html">Đăng ký</a>
+    </div>
+  </nav>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-card__brand">
+        <span class="brand__logo" style="width:44px;height:44px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span>
+      </div>
+      <h1>Đăng nhập</h1>
+      <p class="auth-card__sub">Nhật ký mùa vụ thông minh cho nông hộ Việt</p>
+
+      <div class="demo-hint">Nguyên mẫu demo — nhập email bất kỳ (hoặc email mẫu trong README) rồi chọn vai trò để vào đúng bộ màn hình.</div>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="email">Email <span class="req">*</span></label>
+          <input class="input" type="email" id="email" name="email" placeholder="vidu@gmail.com" data-rules="required|email" autocomplete="email">
+          <div class="field__error"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="password">Mật khẩu <span class="req">*</span></label>
+          <input class="input" type="password" id="password" name="password" placeholder="••••••••" data-rules="required">
+          <div class="field__error"></div>
+        </div>
+        <div class="field">
+          <span class="field__label">Đăng nhập với vai trò <span class="req">*</span></span>
+          <div class="role-picker" id="role-picker">
+            <button type="button" class="role-pick is-active" data-role="farmer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg> Nông dân</button>
+            <button type="button" class="role-pick" data-role="expert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21c0-9 4-15 14-16-1 10-5 15-14 16z"/><path d="M6 21c3-6 7-9 11-11"/></svg> Chuyên gia</button>
+            <button type="button" class="role-pick" data-role="coordinator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Điều phối HTX</button>
+            <button type="button" class="role-pick" data-role="admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Quản trị viên</button>
+          </div>
+          <div class="field__hint">Có thể đổi vai trò nhanh sau đó ở menu tài khoản (phục vụ demo).</div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block" id="btn-login">Đăng nhập</button>
+      </form>
+
+      <div class="row row--between" style="margin-top:14px">
+        <a class="small" href="forgot-password.html">Quên mật khẩu?</a>
+        <span class="small">Chưa có tài khoản? <a href="register.html">Đăng ký</a></span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">CropMate AI · BTL môn Phát triển ứng dụng Web cơ bản (CSE122)</footer>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/modules/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui;
+  const params = new URLSearchParams(location.search);
+  const next = params.get('next');
+
+  /* Nếu đã đăng nhập thì vào thẳng trang đích */
+  const me = CM.api.current();
+  if (me) { go(me.role); return; }
+
+  let role = 'farmer';
+  document.querySelectorAll('#role-picker .role-pick').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('#role-picker .role-pick').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      role = btn.getAttribute('data-role');
+    });
+  });
+
+  const form = document.getElementById('login-form');
+  ui.bindLiveValidation(form);
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!ui.validateForm(form)) { ui.toast('Vui lòng kiểm tra lại thông tin đăng nhập.', 'error'); return; }
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang đăng nhập...';
+    setTimeout(function () {
+      const data = ui.serializeForm(form);
+      CM.api.login(data.email, role);
+      ui.toast('Đăng nhập thành công!', 'success');
+      go(role);
+    }, 600);
+  });
+
+  function go(r) {
+    const home = { farmer: 'farmer-season-dashboard.html', expert: 'expert-request-queue.html', coordinator: 'coordinator-farm-overview.html', admin: 'admin-dashboard.html' }[r];
+    const target = next && !next.match(/^(login|register|forgot-password)\.html/) ? next : home;
+    location.href = target;
+  }
+});
+</script>
+</body>
+</html>

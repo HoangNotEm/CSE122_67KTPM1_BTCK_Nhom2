@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CropMate AI – Nhật ký mùa vụ thông minh &amp; trợ lý canh tác</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="public-page">
+  <nav class="public-nav" aria-label="Điều hướng chính">
+    <a class="brand" href="index.html"><span class="brand__logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span><span>CropMate AI</span></a>
+    <div class="public-nav__links">
+      <a href="#features">Tính năng</a>
+      <a href="#ai">AI</a>
+      <a href="login.html">Đăng nhập</a>
+      <a class="btn btn--primary btn--sm" href="register.html">Đăng ký</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <h1>Nhật ký mùa vụ thông minh &amp; trợ lý canh tác cho nông hộ Việt</h1>
+    <p>Giải quyết trọn vẹn 4 khó khăn thường gặp: nhật ký mùa vụ phân tán khó khôi phục (P1), khó theo dõi công việc theo từng giai đoạn (P2), ảnh hiện trường không gắn với đồng ruộng nên khó đối chiếu (P3), và chuyên gia thiếu bối cảnh khi tư vấn nên trả lời chậm, chung chung (P4).</p>
+    <div class="hero__cta">
+      <a class="btn btn--light" href="register.html">Bắt đầu miễn phí</a>
+      <a class="btn btn--outline-light" href="login.html">Xem bản demo</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="features" aria-labelledby="features-title">
+      <h2 class="section__title" id="features-title">Một nền tảng — bốn vai trò</h2>
+      <p class="section__sub">Mỗi vai trò có bộ màn hình riêng, cùng làm việc trên một dữ liệu mùa vụ thống nhất — từ ruộng đồng đến phòng khuyến nông.</p>
+      <div class="grid grid--4">
+        <article class="card feature-card">
+          <span class="stat__icon" data-icon="sprout"></span>
+          <h3>Nông dân</h3>
+          <p class="small muted">Ghi nhật ký mùa vụ, chụp lưu ảnh hiện trường và gửi yêu cầu hỗ trợ cho chuyên gia ngay khi phát hiện sự cố.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--blue" data-icon="leaf"></span>
+          <h3>Chuyên gia</h3>
+          <p class="small muted">Tiếp nhận hàng đợi yêu cầu ưu tiên, phản hồi kèm tài nguyên kỹ thuật đúng trọng tâm nhờ đầy đủ bối cảnh mùa vụ.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--amber" data-icon="users"></span>
+          <h3>Điều phối HTX</h3>
+          <p class="small muted">Giám sát các nông hộ, lên lịch hoạt động HTX và tổng hợp báo cáo mùa vụ cho toàn hợp tác xã.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--red" data-icon="shield"></span>
+          <h3>Quản trị viên</h3>
+          <p class="small muted">Quản trị danh mục cây trồng và tài khoản người dùng, đảm bảo dữ liệu nền luôn chuẩn xác.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="ai" aria-labelledby="ai-title">
+      <h2 class="section__title" id="ai-title">Trợ lý AI đồng hành</h2>
+      <p class="section__sub">Ba tính năng AI mô phỏng (rule-based) hỗ trợ từng khâu của mùa vụ — nhanh, giải thích được lý do, và luôn để người dùng quyết định cuối cùng.</p>
+      <div class="grid grid--3">
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--blue" data-icon="search"></span>
+          <h3>AI-1 · Field Issue Classifier</h3>
+          <p class="small muted">Mô tả triệu chứng — AI phân loại nhóm vấn đề, giải thích lý do.</p>
+          <p class="small" style="color:var(--green-800);margin-top:8px">Kết quả AI luôn cho người dùng kiểm soát: Chấp nhận / Sửa / Từ chối / Tạo lại.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon" data-icon="check"></span>
+          <h3>AI-2 · Season Checklist Generator</h3>
+          <p class="small muted">Checklist công việc theo cây trồng và giai đoạn.</p>
+          <p class="small" style="color:var(--green-800);margin-top:8px">Kết quả AI luôn cho người dùng kiểm soát: Chấp nhận / Sửa / Từ chối / Tạo lại.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--amber" data-icon="file"></span>
+          <h3>AI-3 · Farm Log Summarizer</h3>
+          <p class="small muted">Tóm tắt diễn biến mùa vụ giúp chuyên gia tư vấn có bối cảnh.</p>
+          <p class="small" style="color:var(--green-800);margin-top:8px">Kết quả AI luôn cho người dùng kiểm soát: Chấp nhận / Sửa / Từ chối / Tạo lại.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="journey-title">
+      <h2 class="section__title" id="journey-title">Hành trình một mùa vụ</h2>
+      <p class="section__sub">Bốn bước đi cùng nhau trên CropMate AI — dữ liệu chảy tự nhiên từ nông dân đến chuyên gia và HTX.</p>
+      <div class="grid grid--4">
+        <article class="card feature-card">
+          <span class="stat__icon" data-icon="file"></span>
+          <h3>1. Ghi nhật ký</h3>
+          <p class="small muted">Nông dân ghi hoạt động, sự cố và ảnh hiện trường ngay tại ruộng, gắn với đúng mảnh đất và mùa vụ.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--blue" data-icon="leaf"></span>
+          <h3>2. AI phân tích</h3>
+          <p class="small muted">AI phân loại vấn đề, đề xuất checklist công việc theo giai đoạn và tóm tắt diễn biến mùa vụ.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon stat__icon--amber" data-icon="send"></span>
+          <h3>3. Chuyên gia tư vấn</h3>
+          <p class="small muted">Chuyên gia xem đầy đủ bối cảnh, ảnh và lịch sử mùa vụ để phản hồi nhanh, đúng trọng tâm.</p>
+        </article>
+        <article class="card feature-card">
+          <span class="stat__icon" data-icon="chart"></span>
+          <h3>4. HTX tổng kết</h3>
+          <p class="small muted">Điều phối viên tổng hợp báo cáo mùa vụ và lịch hoạt động chung cho toàn HTX.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="cta-title">
+      <div class="card" style="background:linear-gradient(135deg, var(--green-900), var(--green-700));color:#fff;text-align:center;padding:44px 26px;">
+        <h2 id="cta-title" style="color:#fff;margin-bottom:8px">Sẵn sàng cho mùa vụ mới?</h2>
+        <p style="color:#dceddc;max-width:520px;margin:0 auto 22px">Tạo tài khoản miễn phí và bắt đầu ghi nhật ký thông minh ngay hôm nay — không cần cài đặt, chạy trực tiếp trên trình duyệt.</p>
+        <a class="btn btn--light" href="register.html">Đăng ký miễn phí</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">CropMate AI · BTL môn Phát triển ứng dụng Web cơ bản (CSE122) · Nhóm XX</footer>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/modules/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  /* Đổ icon SVG vào các thẻ đánh dấu [data-icon] */
+  document.querySelectorAll('[data-icon]').forEach(function (el) {
+    el.innerHTML = CM.ui.icon(el.getAttribute('data-icon'));
+  });
+});
+</script>
+</body>
+</html>

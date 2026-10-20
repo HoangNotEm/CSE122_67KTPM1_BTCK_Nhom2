@@ -1,0 +1,100 @@
+/* ============================================================
+   CropMate AI – Responsive (responsive.css)
+   Breakpoints: 1024px (tablet), 768px (mobile)
+   ============================================================ */
+
+/* ---------- Tablet (≤ 1024px) ---------- */
+@media (max-width: 1024px) {
+  .grid--4 { grid-template-columns: repeat(2, 1fr); }
+  .grid--3 { grid-template-columns: repeat(2, 1fr); }
+  :root { --sidebar-w: 230px; }
+  .main { padding: 22px 20px 50px; }
+}
+
+/* ---------- Mobile (≤ 768px) ---------- */
+@media (max-width: 768px) {
+  :root { --topbar-h: 56px; }
+
+  /* Topbar: hiện hamburger */
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar__burger { display: grid; place-items: center; }
+  .brand span { display: none; }            /* chỉ giữ logo */
+  .role-badge { display: none; }            /* vai trò hiện ở sidebar */
+  .avatar-btn .avatar-btn__name { display: none; }
+
+  /* Sidebar thành drawer trượt */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 140;
+    height: 100vh; width: 272px;
+    transform: translateX(-105%);
+    transition: transform .25s ease;
+    box-shadow: var(--shadow-3);
+    padding-top: 14px;
+  }
+  .sidebar.is-open { transform: translateX(0); }
+  .sidebar__overlay {
+    display: block; position: fixed; inset: 0; z-index: 130;
+    background: rgba(15, 30, 20, .45); opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .sidebar__overlay.is-open { opacity: 1; pointer-events: auto; }
+
+  .main { padding: 18px 14px 46px; }
+  .page-head { flex-direction: column; }
+  .page-head__actions { width: 100%; }
+  .page-head__actions .btn { flex: 1; }
+
+  /* Grid về 1 cột */
+  .grid--2, .grid--3, .grid--4 { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+
+  /* Filter bar xếp dọc */
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-bar .input, .filter-bar .select { width: 100%; min-width: 0; }
+  .filter-bar__count { margin-left: 0; }
+  .segmented { width: 100%; }
+  .segmented__btn { flex: 1; }
+
+  /* Table → dạng card */
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table thead { display: none; }
+  .table { background: transparent; }
+  .table tbody tr {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 12px; padding: 8px 4px; box-shadow: var(--shadow-1);
+  }
+  .table tbody tr:hover { background: var(--surface); }
+  .table td { border-bottom: 0; padding: 7px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .table td:last-child { border-top: 1px dashed var(--border); margin-top: 6px; padding-top: 12px; }
+  .table-card-label { display: inline-block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); font-weight: 700; }
+  .table__actions { justify-content: flex-end; }
+
+  /* Modal full màn gần hết */
+  .modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal, .modal--lg, .modal--sm { max-width: 100%; max-height: 94vh; border-radius: var(--radius-l) var(--radius-l) 0 0; }
+  .modal__foot { flex-direction: column-reverse; }
+  .modal__foot .btn { width: 100%; }
+
+  /* Chi tiết list thành 1 cột */
+  .detail-list { grid-template-columns: 1fr; gap: 2px; }
+  .detail-list dd { margin-bottom: 8px; }
+
+  /* Toast gần full ngang */
+  .toast-zone { left: 14px; right: 14px; max-width: none; }
+
+  /* Auth & landing */
+  .auth-card { padding: 24px 20px; }
+  .role-picker { grid-template-columns: 1fr; }
+  .hero { padding: 52px 18px; }
+  .hero h1 { font-size: 1.6rem; }
+  .section { padding: 40px 16px; }
+  .public-nav { padding: 12px 16px; }
+  .public-nav__links { gap: 10px; font-size: .9rem; }
+  .gallery { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Mobile nhỏ (≤ 420px) ---------- */
+@media (max-width: 420px) {
+  .gallery { grid-template-columns: 1fr; }
+  .stat { flex-direction: column; align-items: flex-start; }
+  .hero__cta .btn { width: 100%; }
+}

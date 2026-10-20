@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 – Không có quyền truy cập – CropMate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+<div class="error-page">
+  <div>
+    <div class="error-page__code">403</div>
+    <h1>Bạn chưa có quyền truy cập trang này</h1>
+    <p id="msg">Phiên đăng nhập hiện tại không đủ quyền để xem nội dung này.</p>
+    <div class="row" style="justify-content:center;margin-top:20px">
+      <button type="button" class="btn btn--primary" id="btn-switch">Đổi vai trò ngay</button>
+      <a class="btn btn--secondary" href="index.html">Về trang chủ</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/modules/ui.js"></script>
+<script>
+(function () {
+  const ROLE_VI = { farmer: 'Nông dân', expert: 'Chuyên gia', coordinator: 'Điều phối HTX', admin: 'Quản trị viên' };
+  const HOME = { farmer: 'farmer-season-dashboard.html', expert: 'expert-request-queue.html', coordinator: 'coordinator-farm-overview.html', admin: 'admin-dashboard.html' };
+
+  const params = new URLSearchParams(location.search);
+  const need = params.get('need');
+  const from = params.get('from');
+
+  if (need && ROLE_VI[need]) {
+    document.getElementById('msg').textContent =
+      'Trang này yêu cầu vai trò: ' + ROLE_VI[need] + '. Phiên của bạn đang là vai trò khác.';
+  }
+
+  document.getElementById('btn-switch').addEventListener('click', function () {
+    /* Chưa đăng nhập thì về trang đăng nhập, kèm trang đích để quay lại */
+    if (!CM.api.current()) {
+      location.href = 'login.html' + (from ? '?next=' + encodeURIComponent(from) : '');
+      return;
+    }
+    const target = (need && ROLE_VI[need]) ? need : 'farmer';
+    CM.api.switchRole(target);
+    location.href = from || HOME[target] || 'index.html';
+  });
+})();
+</script>
+</body>
+</html>

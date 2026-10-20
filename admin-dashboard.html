@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard hệ thống – CropMate AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-role="admin" data-page="admin-dashboard.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Dashboard hệ thống</h1>
+      <p>Giám sát tổng quan nền tảng CropMate AI.</p>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh -->
+  <section class="grid grid--4" id="stats" aria-label="Thống kê hệ thống">
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+  </section>
+
+  <div class="grid grid--2" style="margin-top: 16px;" id="charts-row">
+    <!-- Biểu đồ cột: yêu cầu theo trạng thái -->
+    <section class="card" aria-labelledby="chart-status-title">
+      <div class="card__head"><h2 id="chart-status-title">Yêu cầu hỗ trợ theo trạng thái</h2></div>
+      <div id="chart-status">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </section>
+
+    <!-- Biểu đồ ngang: tài khoản theo vai trò -->
+    <section class="card" aria-labelledby="chart-roles-title">
+      <div class="card__head"><h2 id="chart-roles-title">Tài khoản theo vai trò</h2></div>
+      <div id="chart-roles">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid" style="grid-template-columns: 3fr 2fr; margin-top: 16px;" id="tables-row">
+    <!-- Yêu cầu mới nhất -->
+    <section class="card" aria-labelledby="latest-title">
+      <div class="card__head">
+        <h2 id="latest-title">Yêu cầu mới nhất</h2>
+        <a class="btn btn--ghost btn--sm" href="#" id="view-all-requests">Xem tất cả</a>
+      </div>
+      <div id="latest-requests">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </section>
+
+    <!-- Hoạt động hệ thống -->
+    <section class="card" aria-labelledby="activity-title">
+      <div class="card__head"><h2 id="activity-title">Hoạt động hệ thống</h2></div>
+      <div id="system-activity">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/modules/ui.js"></script>
+<script src="js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Thống kê nhanh ---------- */
+  async function loadStats() {
+    try {
+      const users = await api.list('users');
+      const requests = await api.list('helpRequests');
+      const resources = await api.list('resources');
+      const logs = await api.list('fieldLogs');
+
+      const month = ui.todayISO().slice(0, 7);
+      const newThisMonth = users.filter(function (u) { return (u.joinedAt || '').slice(0, 7) === month; }).length;
+      const pending = requests.filter(function (r) { return r.status === 'pending'; }).length;
+      const activeResources = resources.filter(function (r) { return r.status === 'active'; }).length;
+
+      const stats = [
+        { icon: 'users', cls: '', value: users.length, label: 'Tổng tài khoản', trend: '+' + newThisMonth + ' tháng này', trendCls: 'stat__trend--up' },
+        { icon: 'inbox', cls: 'stat__icon--amber', value: pending, label: 'Yêu cầu chờ xử lý', trend: pending ? 'Cần điều phối' : 'Không tồn đọng', trendCls: pending ? 'stat__trend--down' : 'stat__trend--up' },
+        { icon: 'book', cls: 'stat__icon--blue', value: activeResources, label: 'Tài nguyên đang hoạt động' },
+        { icon: 'file', cls: '', value: logs.length, label: 'Nhật ký đã ghi' }
+      ];
+      document.getElementById('stats').innerHTML = stats.map(function (s) {
+        return '<div class="stat"><span class="stat__icon ' + s.cls + '">' + ui.icon(s.icon) + '</span>' +
+          '<div><div class="stat__value">' + s.value + '</div><div class="stat__label">' + s.label + '</div>' +
+          (s.trend ? '<div class="stat__trend ' + s.trendCls + '">' + s.trend + '</div>' : '') + '</div></div>';
+      }).join('');
+    } catch (e) {
+      document.getElementById('stats').innerHTML = '<div class="card" style="grid-column:1/-1">' + ui.errorState(e.message) + '</div>';
+      bindRetry(loadStats);
+    }
+  }
+
+  /* ---------- Biểu đồ CSS thuần ---------- */
+  async function loadCharts() {
+    const boxStatus = document.getElementById('chart-status');
+    const boxRoles = document.getElementById('chart-roles');
+    try {
+      const requests = await api.list('helpRequests');
+      const users = await api.list('users');
+
+      /* Biểu đồ cột dọc: yêu cầu theo trạng thái */
+      const order = [
+        { key: 'pending',   label: 'Đang chờ',    color: 'var(--amber-600)' },
+        { key: 'assigned',  label: 'Đang xử lý',  color: 'var(--info)' },
+        { key: 'resolved',  label: 'Đã tư vấn',   color: 'var(--success)' },
+        { key: 'rejected',  label: 'Bị từ chối',  color: 'var(--danger)' },
+        { key: 'cancelled', label: 'Đã hủy',      color: 'var(--neutral)' }
+      ];
+      const counts = order.map(function (o) { return requests.filter(function (r) { return r.status === o.key; }).length; });
+      const maxStatus = Math.max.apply(null, counts.concat([1]));
+      boxStatus.innerHTML =
+        '<div style="display:flex;align-items:flex-end;gap:14px;height:210px;border-bottom:1px solid var(--border);">' +
+        order.map(function (o, i) {
+          const h = Math.max(4, Math.round(counts[i] / maxStatus * 100));
+          return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;" title="' + o.label + ': ' + counts[i] + ' yêu cầu">' +
+            '<span style="font-weight:700;font-size:.88rem;">' + counts[i] + '</span>' +
+            '<div style="width:min(68px,80%);height:' + h + '%;background:' + o.color + ';border-radius:6px 6px 0 0;"></div>' +
+            '</div>';
+        }).join('') + '</div>' +
+        '<div style="display:flex;gap:14px;margin-top:8px;">' +
+        order.map(function (o) { return '<div class="small muted" style="flex:1;text-align:center;">' + o.label + '</div>'; }).join('') +
+        '</div>';
+
+      /* Biểu đồ ngang: tài khoản theo vai trò */
+      const roles = [
+        { key: 'farmer',      label: 'Nông dân',  color: 'var(--green-700)' },
+        { key: 'expert',      label: 'Chuyên gia', color: 'var(--info)' },
+        { key: 'coordinator', label: 'Điều phối',  color: 'var(--amber-600)' },
+        { key: 'admin',       label: 'Quản trị',   color: 'var(--neutral)' }
+      ];
+      const roleCounts = roles.map(function (r) { return users.filter(function (u) { return u.role === r.key; }).length; });
+      const maxRole = Math.max.apply(null, roleCounts.concat([1]));
+      boxRoles.innerHTML = '<div class="stack" style="gap:15px;padding-top:6px;">' +
+        roles.map(function (r, i) {
+          const w = Math.max(4, Math.round(roleCounts[i] / maxRole * 100));
+          return '<div style="display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:12px;">' +
+            '<span class="small" style="font-weight:600;">' + r.label + '</span>' +
+            '<div class="progress" style="height:14px;"><div class="progress__bar" style="width:' + w + '%;background:' + r.color + ';" title="' + r.label + ': ' + roleCounts[i] + ' tài khoản"></div></div>' +
+            '<strong class="small">' + roleCounts[i] + '</strong></div>';
+        }).join('') + '</div>';
+    } catch (e) {
+      boxStatus.innerHTML = ui.errorState(e.message);
+      boxRoles.innerHTML = ui.errorState(e.message);
+      bindRetry(loadCharts);
+    }
+  }
+
+  /* ---------- Bảng yêu cầu mới nhất ---------- */
+  async function loadLatestRequests() {
+    const box = document.getElementById('latest-requests');
+    try {
+      const requests = (await api.list('helpRequests')).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      if (!requests.length) {
+        box.innerHTML = ui.emptyState({ icon: 'inbox', title: 'Chưa có yêu cầu nào', desc: 'Các yêu cầu hỗ trợ từ nông dân sẽ hiển thị tại đây.' });
+        return;
+      }
+      const userById = {};
+      api.read('users').forEach(function (u) { userById[u.id] = u; });
+      const latest = requests.slice(0, 5);
+      box.innerHTML = '<div class="table-wrap"><table class="table">' +
+        '<thead><tr><th>Tiêu đề</th><th>Nông dân</th><th>Ưu tiên</th><th>Trạng thái</th><th>Ngày</th></tr></thead>' +
+        '<tbody>' + latest.map(function (r) {
+          const farmer = userById[r.farmerId] || { name: '—' };
+          return '<tr>' +
+            '<td><span class="table-card-label">Tiêu đề</span><span class="cell-main">' + ui.escapeHtml(r.title) + '</span></td>' +
+            '<td><span class="table-card-label">Nông dân</span>' + ui.escapeHtml(farmer.name) + '</td>' +
+            '<td><span class="table-card-label">Ưu tiên</span>' + ui.badge(r.priority) + '</td>' +
+            '<td><span class="table-card-label">Trạng thái</span>' + ui.badge(r.status) + '</td>' +
+            '<td><span class="table-card-label">Ngày</span><span class="small muted">' + ui.fmtDate(r.createdAt) + '</span></td>' +
+            '</tr>';
+        }).join('') + '</tbody></table></div>';
+    } catch (e) {
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadLatestRequests);
+    }
+  }
+
+  /* ---------- Bảng hoạt động hệ thống ---------- */
+  async function loadActivity() {
+    const box = document.getElementById('system-activity');
+    try {
+      const typeLabels = { helpRequest: 'Hỗ trợ', event: 'Sự kiện', ai: 'AI', system: 'Hệ thống' };
+      const notes = (await api.list('notifications')).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; }).slice(0, 8);
+      if (!notes.length) {
+        box.innerHTML = ui.emptyState({ icon: 'bell', title: 'Chưa có hoạt động', desc: 'Các thông báo trên toàn hệ thống sẽ hiển thị tại đây.' });
+        return;
+      }
+      box.innerHTML = '<div class="table-wrap"><table class="table">' +
+        '<thead><tr><th>Loại</th><th>Nội dung</th><th>Thời điểm</th></tr></thead>' +
+        '<tbody>' + notes.map(function (n) {
+          const body = n.body && n.body.length > 80 ? n.body.slice(0, 80) + '…' : (n.body || '');
+          return '<tr>' +
+            '<td><span class="table-card-label">Loại</span><span class="tag">' + ui.escapeHtml(typeLabels[n.type] || n.type || 'Khác') + '</span></td>' +
+            '<td><span class="table-card-label">Nội dung</span><div class="cell-main">' + ui.escapeHtml(n.title) + '</div><div class="cell-sub">' + ui.escapeHtml(body) + '</div></td>' +
+            '<td><span class="table-card-label">Thời điểm</span><span class="small muted">' + ui.fmtDate(n.createdAt) + '</span></td>' +
+            '</tr>';
+        }).join('') + '</tbody></table></div>';
+    } catch (e) {
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadActivity);
+    }
+  }
+
+  /* ---------- Link "Xem tất cả" (nguyên mẫu) ---------- */
+  document.getElementById('view-all-requests').addEventListener('click', function (e) {
+    e.preventDefault();
+    ui.toast('Nguyên mẫu: chuyên gia xử lý tại hàng đợi của vai trò Chuyên gia.', 'info');
+  });
+
+  /* Boot */
+  loadStats(); loadCharts(); loadLatestRequests(); loadActivity();
+});
+</script>
+</body>
+</html>
