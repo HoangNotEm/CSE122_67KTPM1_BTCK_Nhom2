@@ -80,7 +80,7 @@ TASK-23 – Tích hợp: navigation xuyên suốt, kiểm thử đa trình duy�
 TASK-29 – Phân tích ngữ cảnh, vấn đề, vai trò, user flow (docs/project-proposal.md)
 TASK-30 – Bảng kiểm kê màn hình 21 màn hình được duyệt (docs/screen-list.md)
 TASK-31 – Phân công nhóm & lộ trình 8 tuần (docs/team-assignment.md, docs/roadmap.md)
-TASK-32 – Code prototype 21 màn hình trên nhánh tích hợp (commit 9f85b6e)
+TASK-32 – Code prototype 21 màn hình trên nhánh tích hợp (commit 9f85b6e, refactor ac4a643)
 ```
 
 ---
@@ -135,10 +135,10 @@ Chi tiết yêu cầu: đầy đủ bối cảnh (ảnh, nhật ký liên quan, 
 CRUD tài nguyên tư vấn (tạo/sửa/lưu trữ), tìm kiếm + lọc theo loại/cây trồng, card view, đếm lượt dùng; trạng thái rỗng/lỗi; xóa mềm (archive).
 
 **TASK-13 – Mock data + API** · SV2 · Hạn: 02/11/2026 · Nhánh: `feature/mock-api`
-`js/data.js`: seed 10 thực thể (users, crops, farms, fields, seasons, fieldLogs, helpRequests, resources, events, notifications). `js/api.js`: list/get/create/update/remove async (độ trễ ~450ms), session, role switch, `forceFailNext()` mô phỏng lỗi mạng, `reset()`.
+`js/data.js`: seed 10 thực thể (users, crops, farms, fields, seasons, fieldLogs, helpRequests, resources, events, notifications). `js/api.js`: list/get/create/update/remove async (độ trễ ~450ms), session, role switch, `forceFailNext()` mô phỏng lỗi mạng, `reset()`. **Yêu cầu code:** viết theo phong cách sinh viên năm 2 — vòng lặp `for` đơn giản thay hàm nâng cao, chú thích tiếng Việt giải thích từng bước, không dùng thư viện ngoài.
 
 **TASK-14 – Engine AI** · SV2 · Hạn: 05/11/2026 · Nhánh: `feature/ai-engine`
-`js/modules/ai.js`: `classifyIssue`, `generateChecklist`, `summarizeSeason` (rule-based, mode ok/insufficient/uncertain/network); `AiError.code` để UI render trạng thái thất bại kèm hành động Thử lại/Dùng thủ công/Báo cáo; kết quả AI phải lưu vào trạng thái ứng dụng.
+`js/modules/ai.js`: `classifyIssue`, `generateChecklist`, `summarizeSeason` (rule-based, mode ok/insufficient/uncertain/network); `AiError.code` để UI render trạng thái thất bại kèm hành động Thử lại/Dùng thủ công/Báo cáo; kết quả AI phải lưu vào trạng thái ứng dụng. **Yêu cầu code:** từ điển từ khóa và ngân hàng checklist viết dạng mảng thường, vòng lặp đơn giản, chú thích tiếng Việt ở mỗi bước (đọc hiểu được khi bảo vệ).
 
 **TASK-15 – Review PR chéo** · SV2 · Hạn: theo từng PR · Nhánh: –
 SV2 review & approve PR của SV1 và SV3 theo checklist màn hình; ghi nhận review trong mô tả PR; không tự merge PR của mình.
