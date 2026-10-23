@@ -23,7 +23,7 @@ CM.ui = (function () {
     users:    '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     leaf:     '<path d="M6 21c0-9 4-15 14-16-1 10-5 15-14 16z"/><path d="M6 21c3-6 7-9 11-11"/>',
     sprout:   '<path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 8 2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 1.9-.3h0a1.7 1.7 0 0 0 1 1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     bell:     '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     logout:   '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
     chart:    '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
@@ -97,6 +97,8 @@ CM.ui = (function () {
     const m = document.getElementById('cm-modal');
     if (m) { m.remove(); document.removeEventListener('keydown', escClose); }
   }
+  /* Hộp xác nhận "Bạn chắc chắn?" - trả về Promise để trang gọi có thể
+     viết: CM.ui.confirmModal({...}).then(function (ok) { if (ok) ... }) */
   function confirmModal(opts) {
     return new Promise(function (resolve) {
       const bd = openModal({
@@ -152,7 +154,10 @@ CM.ui = (function () {
   }
   function todayISO() { return new Date().toISOString().slice(0, 10); }
 
-  /* ---------- Ảnh placeholder (SVG data URI, không cần file thật) ---------- */
+  /* ---------- Ảnh placeholder (SVG data URI, không cần file thật) ----------
+     Thay vì chụp ảnh ruộng thật, ta tạo ảnh SVG ngay trong code rồi đổi
+     sang dạng data URI để gán vào thuộc tính src. Nhờ vậy repo không
+     cần thư mục ảnh nặng mà giao diện vẫn có ảnh minh họa. */
   const PALETTE = [['#2e7d32', '#a5d6a7'], ['#0277bd', '#90caf9'], ['#b26a00', '#ffe082'], ['#6a1b9a', '#ce93d8'], ['#c62828', '#ef9a9a'], ['#00695c', '#80cbc4']];
   function placeholder(label, seed, w, h) {
     w = w || 400; h = h || 300;
@@ -258,8 +263,15 @@ CM.ui = (function () {
   }
 
   /* ---------- Khác ---------- */
+  /* Chống gõ phím liên tục làm tìm kiếm chạy quá nhiều lần:
+     chỉ chạy hàm fn sau khi người dùng ngừng gõ ms mili giây */
   function debounce(fn, ms) {
-    let t; return function () { const a = arguments, c = this; clearTimeout(t); t = setTimeout(function () { fn.apply(c, a); }, ms || 250); };
+    let timer;
+    return function () {
+      const args = arguments, self = this;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(self, args); }, ms || 250);
+    };
   }
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });

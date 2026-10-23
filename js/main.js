@@ -1,8 +1,15 @@
 /* ============================================================
    CropMate AI – main.js
-   Tự dựng topbar + sidebar theo vai trò (body[data-role]),
-   bảo vệ trang theo phiên đăng nhập, đổi vai trò nhanh (demo).
-   Trang public (không có data-role) không bị ảnh hưởng.
+   Phu trach: SV3 (tich hop & phat hanh)
+
+   File nay chay tren TAT CA cac trang co thuoc tinh
+   body[data-role]. Viec cua no:
+     1. Kiem tra phien dang nhap - chua dang nhap thi dua ve
+        login.html, sai vai tro thi dua ve 403.html
+     2. Dung topbar + sidebar dua tren vai tro cua user
+     3. Xu ly menu burger tren man hinh nho (drawer)
+   Trang public (index, login, register...) khong co data-role
+   nen main.js khong cham vao.
    ============================================================ */
 (function () {
   const ROLE_META = {
