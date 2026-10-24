@@ -12,7 +12,7 @@
 1. "Đọc file đề BTL-04 CropMate AI và lập bảng kiểm kê màn hình đầy đủ 4 vai trò."
 2. "Dựng design system CSS dùng chung (token màu xanh nông nghiệp, header/sidebar, card, table, form, modal, toast) cho prototype mở bằng file://, không dùng ES module."
 3. "Viết mock data + API LocalStorage giả lập độ trễ cho các entity farms/fields/seasons/fieldLogs/helpRequests/resources/users/crops."
-4. "Triển khai trang farmer-season-dashboard.html với AI-2 Season Checklist Generator đủ chu trình Nhập→Xử lý→Kết quả→Giải thích→Chấp nhận/Sửa/Từ chối/Tạo lại/Lưu, kèm trạng thái thất bại."
+4. "Triển khai trang pages/farmer-season-dashboard.html với AI-2 Season Checklist Generator đủ chu trình Nhập→Xử lý→Kết quả→Giải thích→Chấp nhận/Sửa/Từ chối/Tạo lại/Lưu, kèm trạng thái thất bại."
 5. _(sinh viên bổ sung các prompt khác)_
 
 ## 3. Phần AI sinh ra

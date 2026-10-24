@@ -10,10 +10,10 @@
 
 | Vấn đề | Vai trò chịu ảnh hưởng | Màn hình giải quyết |
 |---|---|---|
-| P1. Nhật ký mùa vụ phân tán | Nông dân | `farmer-field-log.html`, `farmer-season-dashboard.html` |
-| P2. Khó theo dõi task theo giai đoạn | Nông dân, Điều phối HTX | `farmer-season-dashboard.html` (checklist giai đoạn, AI-2), `coordinator-calendar.html` |
-| P3. Ảnh hiện trường không được tổ chức | Nông dân, Chuyên gia | `farmer-field-log.html` (thư viện ảnh theo đồng ruộng/mùa vụ) |
-| P4. Chuyên gia thiếu bối cảnh khi tư vấn | Chuyên gia | `expert-request-detail.html` (AI-3 tóm tắt nhật ký, xem ảnh, lịch sử mùa vụ) |
+| P1. Nhật ký mùa vụ phân tán | Nông dân | `pages/farmer-field-log.html`, `pages/farmer-season-dashboard.html` |
+| P2. Khó theo dõi task theo giai đoạn | Nông dân, Điều phối HTX | `pages/farmer-season-dashboard.html` (checklist giai đoạn, AI-2), `pages/coordinator-calendar.html` |
+| P3. Ảnh hiện trường không được tổ chức | Nông dân, Chuyên gia | `pages/farmer-field-log.html` (thư viện ảnh theo đồng ruộng/mùa vụ) |
+| P4. Chuyên gia thiếu bối cảnh khi tư vấn | Chuyên gia | `pages/expert-request-detail.html` (AI-3 tóm tắt nhật ký, xem ảnh, lịch sử mùa vụ) |
 
 ## 2. Hành trình người dùng theo vai trò
 
@@ -35,34 +35,34 @@ DÙNG CHUNG: profile, settings, notifications, 403, 404
 | # | Vai trò | Mục tiêu người dùng | Nhiệm vụ người dùng | Màn hình | Tệp | CRUD/Trạng thái | AI | Người phụ trách |
 |---:|---|---|---|---|---|---|---|---|
 | 1 | Khách | Hiểu sản phẩm, bắt đầu dùng | Xem giới thiệu, chọn đăng nhập/đăng ký | Landing | `index.html` | R | – | SV3 |
-| 2 | Khách/Tất cả | Truy cập hệ thống | Đăng nhập (validation, chọn vai trò demo) | Login | `login.html` | R | – | SV1 |
-| 3 | Khách | Có tài khoản | Đăng ký (validation đầy đủ) | Register | `register.html` | C | – | SV1 |
-| 4 | Khách | Lấy lại mật khẩu | Nhập email, xác nhận gửi link (giả lập) | Forgot password | `forgot-password.html` | R | – | SV2 |
-| 5 | Tất cả | Quản lý thông tin cá nhân | Xem/sửa hồ sơ, đổi mật khẩu | Profile | `profile.html` | R/U | – | SV2 |
-| 6 | Tất cả | Cá nhân hóa ứng dụng | Bật/tắt thông báo, chế độ hiển thị, ngôn ngữ | Settings | `settings.html` | U | – | SV2 |
-| 7 | Tất cả | Không bỏ lỡ sự kiện | Xem/danh dấu đã đọc thông báo | Notifications | `notifications.html` | R/U | – | SV1 |
-| 8 | Tất cả | Hiểu lỗi phân quyền | Xem thông báo 403, quay lại | Error 403 | `403.html` | R | – | SV3 |
-| 9 | Tất cả | Xử lý liên kết hỏng | Xem thông báo 404, tìm kiếm gợi ý | Error 404 | `404.html` | R | – | SV3 |
-| 10 | Nông dân | Nắm tình hình mùa vụ | Xem tiến độ giai đoạn, task sắp tới, tạo checklist | Season Dashboard | `farmer-season-dashboard.html` | R | **AI-2 Checklist Generator** | SV1 |
-| 11 | Nông dân | Ghi chép có tổ chức | Tạo/xem/sửa nhật ký, gắn ảnh, lọc theo mùa vụ | Field Log | `farmer-field-log.html` | C/R/U | – | SV1 |
-| 12 | Nông dân | Được tư vấn kịp thời | Tạo/xem/sửa/hủy yêu cầu, phân loại tự động | Help Request | `farmer-help-request.html` | C/R/U/D (Hủy) | **AI-1 Issue Classifier** | SV1 |
-| 13 | Chuyên gia | Ưu tiên xử lý đúng | Xem hàng đợi, lọc mức độ/trạng thái, nhận xử lý | Request Queue | `expert-request-queue.html` | R/U (nhận việc) | – | SV2 |
-| 14 | Chuyên gia | Tư vấn có bối cảnh | Xem chi tiết + ảnh + nhật ký (AI-3), gửi phản hồi, gắn tài nguyên | Request Detail | `expert-request-detail.html` | C/R/U | **AI-3 Log Summarizer** | SV2 |
-| 15 | Chuyên gia | Tái sử dụng kiến thức | Tạo/xem/sửa/xóa tài nguyên, lọc theo cây trồng | Resource Library | `expert-resource-library.html` | C/R/U/D | – | SV2 |
-| 16 | Điều phối HTX | Giám sát nông hộ | Xem danh sách nông hộ, lọc, xem hoạt động gần đây | Farm Overview | `coordinator-farm-overview.html` | R | – | SV3 |
-| 17 | Điều phối HTX | Điều phối công việc | Tạo/xem/sửa lịch công việc HTX (tuần/tháng) | Calendar | `coordinator-calendar.html` | C/R/U | – | SV3 |
-| 18 | Điều phối HTX | Tổng kết mùa vụ | Xem/chỉnh sửa báo cáo, xuất CSV, đối chiếu chỉ tiêu | Season Summary | `coordinator-season-summary.html` | R/U/D (lưu trữ) | – | SV3 |
-| 19 | Quản trị viên | Giám sát hệ thống | Xem thống kê tài khoản, yêu cầu, hoạt động | Admin Dashboard | `admin-dashboard.html` | R | – | SV3 |
-| 20 | Quản trị viên | Chuẩn hóa dữ liệu nền | Tạo/xem/sửa danh mục cây trồng/giai đoạn | Crop Management | `admin-crop-management.html` | C/R/U | – | SV3 |
-| 21 | Quản trị viên | Kiểm soát truy cập | Tạo/xem/sửa/khóa tài khoản, phân vai trò | User Management | `admin-user-management.html` | C/R/U/D (khóa) | – | SV3 |
+| 2 | Khách/Tất cả | Truy cập hệ thống | Đăng nhập (validation, chọn vai trò demo) | Login | `pages/login.html` | R | – | SV1 |
+| 3 | Khách | Có tài khoản | Đăng ký (validation đầy đủ) | Register | `pages/register.html` | C | – | SV1 |
+| 4 | Khách | Lấy lại mật khẩu | Nhập email, xác nhận gửi link (giả lập) | Forgot password | `pages/forgot-password.html` | R | – | SV2 |
+| 5 | Tất cả | Quản lý thông tin cá nhân | Xem/sửa hồ sơ, đổi mật khẩu | Profile | `pages/profile.html` | R/U | – | SV2 |
+| 6 | Tất cả | Cá nhân hóa ứng dụng | Bật/tắt thông báo, chế độ hiển thị, ngôn ngữ | Settings | `pages/settings.html` | U | – | SV2 |
+| 7 | Tất cả | Không bỏ lỡ sự kiện | Xem/danh dấu đã đọc thông báo | Notifications | `pages/notifications.html` | R/U | – | SV1 |
+| 8 | Tất cả | Hiểu lỗi phân quyền | Xem thông báo 403, quay lại | Error 403 | `pages/403.html` | R | – | SV3 |
+| 9 | Tất cả | Xử lý liên kết hỏng | Xem thông báo 404, tìm kiếm gợi ý | Error 404 | `pages/404.html` | R | – | SV3 |
+| 10 | Nông dân | Nắm tình hình mùa vụ | Xem tiến độ giai đoạn, task sắp tới, tạo checklist | Season Dashboard | `pages/farmer-season-dashboard.html` | R | **AI-2 Checklist Generator** | SV1 |
+| 11 | Nông dân | Ghi chép có tổ chức | Tạo/xem/sửa nhật ký, gắn ảnh, lọc theo mùa vụ | Field Log | `pages/farmer-field-log.html` | C/R/U | – | SV1 |
+| 12 | Nông dân | Được tư vấn kịp thời | Tạo/xem/sửa/hủy yêu cầu, phân loại tự động | Help Request | `pages/farmer-help-request.html` | C/R/U/D (Hủy) | **AI-1 Issue Classifier** | SV1 |
+| 13 | Chuyên gia | Ưu tiên xử lý đúng | Xem hàng đợi, lọc mức độ/trạng thái, nhận xử lý | Request Queue | `pages/expert-request-queue.html` | R/U (nhận việc) | – | SV2 |
+| 14 | Chuyên gia | Tư vấn có bối cảnh | Xem chi tiết + ảnh + nhật ký (AI-3), gửi phản hồi, gắn tài nguyên | Request Detail | `pages/expert-request-detail.html` | C/R/U | **AI-3 Log Summarizer** | SV2 |
+| 15 | Chuyên gia | Tái sử dụng kiến thức | Tạo/xem/sửa/xóa tài nguyên, lọc theo cây trồng | Resource Library | `pages/expert-resource-library.html` | C/R/U/D | – | SV2 |
+| 16 | Điều phối HTX | Giám sát nông hộ | Xem danh sách nông hộ, lọc, xem hoạt động gần đây | Farm Overview | `pages/coordinator-farm-overview.html` | R | – | SV3 |
+| 17 | Điều phối HTX | Điều phối công việc | Tạo/xem/sửa lịch công việc HTX (tuần/tháng) | Calendar | `pages/coordinator-calendar.html` | C/R/U | – | SV3 |
+| 18 | Điều phối HTX | Tổng kết mùa vụ | Xem/chỉnh sửa báo cáo, xuất CSV, đối chiếu chỉ tiêu | Season Summary | `pages/coordinator-season-summary.html` | R/U/D (lưu trữ) | – | SV3 |
+| 19 | Quản trị viên | Giám sát hệ thống | Xem thống kê tài khoản, yêu cầu, hoạt động | Admin Dashboard | `pages/admin-dashboard.html` | R | – | SV3 |
+| 20 | Quản trị viên | Chuẩn hóa dữ liệu nền | Tạo/xem/sửa danh mục cây trồng/giai đoạn | Crop Management | `pages/admin-crop-management.html` | C/R/U | – | SV3 |
+| 21 | Quản trị viên | Kiểm soát truy cập | Tạo/xem/sửa/khóa tài khoản, phân vai trò | User Management | `pages/admin-user-management.html` | C/R/U/D (khóa) | – | SV3 |
 
 **Tổng: 21 màn hình** (12 màn hình nền tảng mục 8 đề bài + 9 màn hình dùng chung được phân tích là cần thiết).
 
 ### Vì sao không cần thêm màn hình nông dân thứ 4?
 
-- Chi tiết một mùa vụ/giai đoạn: hiển thị **trong** `farmer-season-dashboard.html` (mở rộng/collapse từng giai đoạn) thay vì tách trang rỗng.
-- Chi tiết một nhật ký + ảnh: **modal chi tiết** trong `farmer-field-log.html`.
-- Ảnh hiện trường (P3): thư viện ảnh là một chế độ xem (tab) trong `farmer-field-log.html`, không tách trang.
+- Chi tiết một mùa vụ/giai đoạn: hiển thị **trong** `pages/farmer-season-dashboard.html` (mở rộng/collapse từng giai đoạn) thay vì tách trang rỗng.
+- Chi tiết một nhật ký + ảnh: **modal chi tiết** trong `pages/farmer-field-log.html`.
+- Ảnh hiện trường (P3): thư viện ảnh là một chế độ xem (tab) trong `pages/farmer-field-log.html`, không tách trang.
 - Như vậy đủ mô phỏng trọn vẹn luồng nghiệp vụ nông dân từ đầu đến cuối mà không tách chức năng đơn giản thành nhiều trang.
 
 ---
