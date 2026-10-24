@@ -1,13 +1,9 @@
 # Quy trình Git/GitHub – CropMate AI
 
 ## 1. Repo
-Tên repo: `cse122-cropmate-ai-teamXX` (XX = mã nhóm).
+Repo nhóm: `CSE122_67KTPM1_BTCK_Nhom2` – https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2
 
-```bash
-git init
-git add .
-git commit -m "docs: add project proposal and screen inventory"
-```
+Cấu trúc chuẩn: landing `index.html` ở gốc; 20 màn hình còn lại trong `pages/`; dùng chung `css/`, `js/`, `assets/`.
 
 ## 2. Chiến lược nhánh
 ```text
@@ -16,6 +12,13 @@ dev         ← nhánh tích hợp, mọi PR merge vào đây
 feature/<feature-name>
 fix/<bug-name>
 docs/<document-name>
+```
+
+Các nhánh đã tạo cho đồ án:
+```text
+feature/farmer-screens              → SV1: nông dân + login/register/notifications
+feature/expert-screens              → SV2: chuyên gia + forgot-password/profile/settings
+feature/coordinator-admin-screens   → SV3: điều phối + quản trị + landing/403/404
 ```
 
 Ví dụ: `feature/farmer-season-dashboard`, `feature/expert-request-queue`, `feature/admin-user-management`, `fix/help-request-validation`.

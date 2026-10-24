@@ -51,23 +51,23 @@ TASK-28 – Hoàn thiện README (điền link OBS thật) + docs/ai-usage-repor
 **PASTE:**
 
 ```text
-TASK-05 – farmer-season-dashboard.html (HTML+CSS+JS+data+responsive)
-TASK-06 – farmer-field-log.html
-TASK-07 – farmer-help-request.html (AI-1)
+TASK-05 – pages/farmer-season-dashboard.html (HTML+CSS+JS+data+responsive)
+TASK-06 – pages/farmer-field-log.html
+TASK-07 – pages/farmer-help-request.html (AI-1)
 TASK-08 – Nhóm trang auth: index, login, register, forgot-password
 TASK-09 – Design system css/style.css + audit khả năng tiếp cận
-TASK-10 – expert-request-queue.html
-TASK-11 – expert-request-detail.html (AI-3)
-TASK-12 – expert-resource-library.html
+TASK-10 – pages/expert-request-queue.html
+TASK-11 – pages/expert-request-detail.html (AI-3)
+TASK-12 – pages/expert-resource-library.html
 TASK-13 – js/data.js + js/api.js (mock API, LocalStorage, trạng thái lỗi mạng)
 TASK-14 – js/modules/ai.js (3 tính năng AI + trạng thái thất bại)
 TASK-15 – Review PR chéo (SV2 review PR của SV1, SV3)
-TASK-16 – coordinator-farm-overview.html
-TASK-17 – coordinator-calendar.html
-TASK-18 – coordinator-season-summary.html
-TASK-19 – admin-dashboard.html
-TASK-20 – admin-crop-management.html
-TASK-21 – admin-user-management.html
+TASK-16 – pages/coordinator-farm-overview.html
+TASK-17 – pages/coordinator-calendar.html
+TASK-18 – pages/coordinator-season-summary.html
+TASK-19 – pages/admin-dashboard.html
+TASK-20 – pages/admin-crop-management.html
+TASK-21 – pages/admin-user-management.html
 TASK-22 – Nhóm trang cá nhân: profile, settings, notifications, 403, 404
 TASK-23 – Tích hợp: navigation xuyên suốt, kiểm thử đa trình duyệt/di động, phát hành
 ```
@@ -110,28 +110,28 @@ Nội dung: repo `cse122-cropmate-ai-team02`, cấu trúc đề mục 19 (docs/,
 **TASK-02/03/04 – Figma/Canva** · SV1 lead, SV2/SV3 cùng thực hiện phần màn của mình · Hạn: 26/10/2026
 Sơ đồ trang, user flow theo 7 bước mục 7 của đề; wireframe khung dây; mockup desktop 21 màn hình; bản responsive chính (mobile); trạng thái rỗng/đang tải/lỗi; nguyên mẫu tương tác AI-1/2/3 (nhập → đang xử lý → kết quả → giải thích → chấp nhận/sửa/từ chối). Điền link vào `design/figma-link.txt`.
 
-**TASK-05 – farmer-season-dashboard.html** · SV1 · Hạn: 02/11/2026 · Nhánh: `feature/farmer-season-dashboard`
+**TASK-05 – pages/farmer-season-dashboard.html** · SV1 · Hạn: 02/11/2026 · Nhánh: `feature/farmer-season-dashboard`
 Dashboard mùa vụ: stat cards, tiến độ giai đoạn, checklist công việc, yêu cầu gần đây; **AI-2 Season Checklist Generator** (nhập cây trồng + giai đoạn → đang xử lý → checklist → giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại/Lưu).
 
-**TASK-06 – farmer-field-log.html** · SV1 · Hạn: 05/11/2026 · Nhánh: `feature/farmer-field-log`
+**TASK-06 – pages/farmer-field-log.html** · SV1 · Hạn: 05/11/2026 · Nhánh: `feature/farmer-field-log`
 CRUD nhật ký đồng ruộng: tạo/sửa/xóa (mềm), gắn ảnh placeholder SVG, timeline, lọc theo mùa vụ + loại hoạt động, tìm kiếm, phân trang; trạng thái rỗng/lỗi.
 
-**TASK-07 – farmer-help-request.html** · SV1 · Hạn: 09/11/2026 · Nhánh: `feature/farmer-help-request`
+**TASK-07 – pages/farmer-help-request.html** · SV1 · Hạn: 09/11/2026 · Nhánh: `feature/farmer-help-request`
 CRUD yêu cầu hỗ trợ (2 pha: mô tả → AI phân loại → hoàn thiện gửi); **AI-1 Field Issue Classifier** (mô tả/ảnh → nhóm vấn đề + độ tin cậy + giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại); trạng thái pending/assigned/resolved/rejected/cancelled; trạng thái thất bại: "Không đủ dữ liệu", "AI chưa chắc chắn", "Không thể xử lý lúc này" + Thử lại/Dùng thủ công.
 
 **TASK-08 – Nhóm trang auth** · SV1 · Hạn: 12/11/2026 · Nhánh: `feature/shared-auth-pages`
-`index.html` (landing: hero, tính năng, AI, hành trình), `login.html` (role-picker, demo accounts), `register.html` (validation: required/email/phone/đồng ý điều khoản), `forgot-password.html` (trạng thái thành công).
+`index.html` (landing: hero, tính năng, AI, hành trình), `pages/login.html` (role-picker, demo accounts), `pages/register.html` (validation: required/email/phone/đồng ý điều khoản), `pages/forgot-password.html` (trạng thái thành công).
 
 **TASK-09 – Design system & a11y** · SV1 · Hạn: 12/11/2026 · Nhánh: `feature/design-system`
 `css/style.css` (tokens màu/typography/spacing, components: topbar, sidebar, btn, card, badge, table, form, modal, toast, tabs, skeleton, ai-panel), `css/responsive.css` (breakpoint 1024/768/420, drawer mobile, table→card); audit contrast, alt text, focus, skip-link, aria.
 
-**TASK-10 – expert-request-queue.html** · SV2 · Hạn: 05/11/2026 · Nhánh: `feature/expert-request-queue`
+**TASK-10 – pages/expert-request-queue.html** · SV2 · Hạn: 05/11/2026 · Nhánh: `feature/expert-request-queue`
 Hàng đợi yêu cầu: tìm kiếm, lọc theo trạng thái/ưu tiên/cây trồng, sắp xếp, badge AI phân loại, mở chi tiết `?id=`; trạng thái rỗng/lỗi/thành công.
 
-**TASK-11 – expert-request-detail.html** · SV2 · Hạn: 09/11/2026 · Nhánh: `feature/expert-request-detail`
+**TASK-11 – pages/expert-request-detail.html** · SV2 · Hạn: 09/11/2026 · Nhánh: `feature/expert-request-detail`
 Chi tiết yêu cầu: đầy đủ bối cảnh (ảnh, nhật ký liên quan, AI classification); **AI-3 Farm Log Summarizer** (tóm tắt diễn biến mùa vụ → giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại); form phản hồi (validation min 20 ký tự), đính kèm tài nguyên từ thư viện, chuyển trạng thái assigned/resolved/rejected; lý do từ chối bắt buộc.
 
-**TASK-12 – expert-resource-library.html** · SV2 · Hạn: 12/11/2026 · Nhánh: `feature/expert-resource-library`
+**TASK-12 – pages/expert-resource-library.html** · SV2 · Hạn: 12/11/2026 · Nhánh: `feature/expert-resource-library`
 CRUD tài nguyên tư vấn (tạo/sửa/lưu trữ), tìm kiếm + lọc theo loại/cây trồng, card view, đếm lượt dùng; trạng thái rỗng/lỗi; xóa mềm (archive).
 
 **TASK-13 – Mock data + API** · SV2 · Hạn: 02/11/2026 · Nhánh: `feature/mock-api`
@@ -144,13 +144,13 @@ CRUD tài nguyên tư vấn (tạo/sửa/lưu trữ), tìm kiếm + lọc theo l
 SV2 review & approve PR của SV1 và SV3 theo checklist màn hình; ghi nhận review trong mô tả PR; không tự merge PR của mình.
 
 **TASK-16/17/18 – Nhóm Điều phối** · SV3 · Hạn: 02–09/11/2026 · Nhánh: `feature/coordinator-*`
-`coordinator-farm-overview.html` (stat nông hộ, cards mùa vụ + progress, modal chi tiết, timeline hợp nhất sự kiện/nhật ký); `coordinator-calendar.html` (lưới tháng/tuần, CRUD sự kiện, hủy mềm, validation); `coordinator-season-summary.html` (KPI, bảng nông hộ table→card, ghi chú lưu localStorage, xuất CSV, lưu trữ báo cáo → disabled).
+`pages/coordinator-farm-overview.html` (stat nông hộ, cards mùa vụ + progress, modal chi tiết, timeline hợp nhất sự kiện/nhật ký); `pages/coordinator-calendar.html` (lưới tháng/tuần, CRUD sự kiện, hủy mềm, validation); `pages/coordinator-season-summary.html` (KPI, bảng nông hộ table→card, ghi chú lưu localStorage, xuất CSV, lưu trữ báo cáo → disabled).
 
 **TASK-19/20/21 – Nhóm Quản trị** · SV3 · Hạn: 09–16/11/2026 · Nhánh: `feature/admin-*`
-`admin-dashboard.html` (stat cards, biểu đồ CSS thuần: trạng thái yêu cầu, tài khoản theo vai trò, hoạt động gần đây); `admin-crop-management.html` (CRUD danh mục cây trồng, tìm kiếm/lọc); `admin-user-management.html` (CRUD tài khoản, khóa/mở khóa, phân trang 7/trang).
+`pages/admin-dashboard.html` (stat cards, biểu đồ CSS thuần: trạng thái yêu cầu, tài khoản theo vai trò, hoạt động gần đây); `pages/admin-crop-management.html` (CRUD danh mục cây trồng, tìm kiếm/lọc); `pages/admin-user-management.html` (CRUD tài khoản, khóa/mở khóa, phân trang 7/trang).
 
 **TASK-22 – Nhóm trang cá nhân** · SV3 · Hạn: 16/11/2026 · Nhánh: `feature/shared-personal-pages`
-`profile.html` (xem/sửa hồ sơ, đổi mật khẩu mock), `settings.html` (thông báo, cỡ chữ, giảm chuyển động, reset dữ liệu mẫu), `notifications.html` (segmented lọc loại/đã đọc, đánh dấu đọc, xóa), `403.html` (role guard, nút đổi vai trò), `404.html`.
+`pages/profile.html` (xem/sửa hồ sơ, đổi mật khẩu mock), `pages/settings.html` (thông báo, cỡ chữ, giảm chuyển động, reset dữ liệu mẫu), `pages/notifications.html` (segmented lọc loại/đã đọc, đánh dấu đọc, xóa), `pages/403.html` (role guard, nút đổi vai trò), `pages/404.html`.
 
 **TASK-23 – Tích hợp & phát hành** · SV3 · Hạn: 19/11/2026 · Nhánh: `dev` → `main`
 Navigation xuyên suốt 4 vai trò (`js/main.js`), role guard + switcher, kiểm thử đa trình duyệt (Chrome/Edge/Firefox) + di động 420px, sửa lỗi tích hợp, merge `dev` → `main`, đánh tag `v1.0`.

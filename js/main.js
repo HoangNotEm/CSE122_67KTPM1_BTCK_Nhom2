@@ -94,7 +94,7 @@
       '<a class="skip-link" href="#main">Bỏ qua điều hướng</a>' +
       '<header class="topbar">' +
         '<button type="button" class="topbar__burger" id="burger" aria-label="Mở menu">' + ui.icon('menu') + '</button>' +
-        '<a class="brand" href="index.html"><span class="brand__logo">' + ui.icon('sprout') + '</span><span>CropMate AI</span></a>' +
+        '<a class="brand" href="../index.html"><span class="brand__logo">' + ui.icon('sprout') + '</span><span>CropMate AI</span></a>' +
         '<span class="topbar__spacer"></span>' +
         '<span class="role-badge">' + ui.icon(meta.icon) + ' ' + meta.label + '</span>' +
         '<a class="icon-btn" href="notifications.html" aria-label="Thông báo">' + ui.icon('bell') + (unread ? '<span class="icon-btn__dot">' + unread + '</span>' : '') + '</a>' +
@@ -147,7 +147,7 @@
     document.querySelectorAll('[data-switch-role]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         CM.api.switchRole(btn.getAttribute('data-switch-role'));
-        const target = ((NAV[btn.getAttribute('data-switch-role')] || [])[0] || {}).href || 'index.html';
+        const target = ((NAV[btn.getAttribute('data-switch-role')] || [])[0] || {}).href || '../index.html';
         location.href = target;
       });
     });

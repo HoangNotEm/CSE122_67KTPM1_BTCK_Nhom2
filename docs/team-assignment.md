@@ -10,12 +10,12 @@
 | Sinh viên | Vai trò chính | Màn hình phụ trách | Số màn hình |
 |---|---|---|---:|
 | **SV1** | Nông dân | `farmer-season-dashboard`, `farmer-field-log`, `farmer-help-request` (kèm AI-1, AI-2) | 3 |
-| | Giao diện dùng chung | `login.html`, `register.html`, `notifications.html` | 3 |
+| | Giao diện dùng chung | `pages/login.html`, `pages/register.html`, `pages/notifications.html` | 3 |
 | **SV2** | Chuyên gia nông nghiệp | `expert-request-queue`, `expert-request-detail` (kèm AI-3), `expert-resource-library` | 3 |
-| | Tài khoản | `forgot-password.html`, `profile.html`, `settings.html` | 3 |
+| | Tài khoản | `pages/forgot-password.html`, `pages/profile.html`, `pages/settings.html` | 3 |
 | **SV3** | Điều phối HTX | `coordinator-farm-overview`, `coordinator-calendar`, `coordinator-season-summary` | 3 |
 | | Quản trị viên | `admin-dashboard`, `admin-crop-management`, `admin-user-management` | 3 |
-| | Hệ thống | `index.html`, `403.html`, `404.html` + tích hợp toàn dự án | 3 |
+| | Hệ thống | `index.html`, `pages/403.html`, `pages/404.html` + tích hợp toàn dự án | 3 |
 | | **Tổng** | | **21** |
 
 ## Trách nhiệm chéo xuyên suốt
