@@ -100,3 +100,4 @@ Commit đúng kiểu `feat:/fix:/style:/refactor:/docs:` — cấm `update`, `do
 
 ## Minh chứng OBS
 Mỗi màn hình 1 video, đặt tên `SV1-01-screen-name.mp4` …; link video điền vào cột "Video OBS" ở bảng trên + Trello.
+Kịch bản quay theo từng thành viên: [`docs/obs/sv1-farmer.md`](docs/obs/sv1-farmer.md) · [`docs/obs/sv2-expert.md`](docs/obs/sv2-expert.md) · [`docs/obs/sv3-coordinator-admin.md`](docs/obs/sv3-coordinator-admin.md).
