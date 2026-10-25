@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     TRANG: Nhật ký đồng ruộng (farmer-field-log.html)
+     C/R/U nhật ký + thư viện ảnh. Dữ liệu qua CM.api,
+     đủ trạng thái loading / empty / error.
+     ============================================================ -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhật ký đồng ruộng – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="farmer" data-page="farmer-field-log.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Nhật ký đồng ruộng</h1>
+      <p>Ghi lại hoạt động canh tác, ghi chú quan sát và sự cố trên từng đồng ruộng theo mùa vụ.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-new-log">Ghi nhật ký mới</button>
+    </div>
+  </div>
+
+  <!-- Bộ lọc -->
+  <div class="filter-bar">
+    <div class="filter-bar__search">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input class="input" type="search" id="f-search" placeholder="Tìm theo tiêu đề, nội dung..." aria-label="Tìm kiếm nhật ký">
+    </div>
+    <select class="select" id="f-season" aria-label="Lọc theo mùa vụ"></select>
+    <select class="select" id="f-field" aria-label="Lọc theo đồng ruộng"></select>
+    <select class="select" id="f-type" aria-label="Lọc theo loại nhật ký"></select>
+    <span class="filter-bar__count" id="f-count"></span>
+  </div>
+
+  <!-- Tabs: Nhật ký + Thư viện ảnh -->
+  <div data-tabs-scope>
+    <div class="tabs" data-tabs role="tablist">
+      <button type="button" class="tabs__btn is-active" data-tab="logs" aria-selected="true">Nhật ký</button>
+      <button type="button" class="tabs__btn" data-tab="photos" aria-selected="false">Thư viện ảnh</button>
+    </div>
+
+    <div class="tab-pane is-active" data-pane="logs" id="log-list"></div>
+    <div class="tab-pane" data-pane="photos" id="photo-list"></div>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/modules/ai.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  /* ---------- Dữ liệu nền ---------- */
+  const fields = api.read('fields');
+  const farms = api.read('farms').filter(function (f) { return f.ownerId === me.id; });
+  const myFieldIds = farms.length
+    ? fields.filter(function (d) { return farms.some(function (f) { return f.id === d.farmId; }); }).map(function (d) { return d.id; })
+    : fields.map(function (d) { return d.id; }); /* dữ liệu mẫu: hiển thị tất cả nếu chưa có nông hộ */
+  const myFields = fields.filter(function (d) { return myFieldIds.indexOf(d.id) >= 0; });
+  const mySeasons = api.read('seasons').filter(function (s) { return myFieldIds.indexOf(s.fieldId) >= 0; });
+  const fieldById = {}; fields.forEach(function (d) { fieldById[d.id] = d; });
+  const seasonById = {}; mySeasons.forEach(function (s) { seasonById[s.id] = s; });
+
+  const TYPE_LABEL = { note: 'Ghi chú', activity: 'Hoạt động', issue: 'Sự cố' };
+  const ISSUE_TYPES = ['sâu bệnh', 'dinh dưỡng', 'tưới tiêu', 'đất', 'thời tiết', 'khác'];
+
+  const urlSeason = new URLSearchParams(location.search).get('season');
+
+  let logs = [];
+  let currentPhotos = [];
+  const state = { q: '', seasonId: '', fieldId: '', type: '' };
+
+  /* ---------- DOM ---------- */
+  const listBox = document.getElementById('log-list');
+  const photoBox = document.getElementById('photo-list');
+  const countEl = document.getElementById('f-count');
+  const searchEl = document.getElementById('f-search');
+  const seasonSel = document.getElementById('f-season');
+  const fieldSel = document.getElementById('f-field');
+  const typeSel = document.getElementById('f-type');
+
+  /* ---------- Tùy chọn bộ lọc ---------- */
+  seasonSel.innerHTML = '<option value="">Tất cả mùa vụ</option>' + mySeasons.map(function (s) {
+    return '<option value="' + s.id + '">' + ui.escapeHtml(s.name) + ' · ' + ui.escapeHtml((fieldById[s.fieldId] || {}).name || '') + '</option>';
+  }).join('');
+  fieldSel.innerHTML = '<option value="">Tất cả đồng ruộng</option>' + myFields.map(function (d) {
+    return '<option value="' + d.id + '">' + ui.escapeHtml(d.name) + '</option>';
+  }).join('');
+  typeSel.innerHTML = '<option value="">Tất cả loại</option>' +
+    '<option value="note">Ghi chú</option>' +
+    '<option value="activity">Hoạt động</option>' +
+    '<option value="issue">Sự cố</option>';
+  if (urlSeason && seasonById[urlSeason]) { state.seasonId = urlSeason; seasonSel.value = urlSeason; }
+
+  searchEl.addEventListener('input', ui.debounce(function () { state.q = searchEl.value.trim(); render(); }, 250));
+  seasonSel.addEventListener('change', function () { state.seasonId = seasonSel.value; render(); });
+  fieldSel.addEventListener('change', function () { state.fieldId = fieldSel.value; render(); });
+  typeSel.addEventListener('change', function () { state.type = typeSel.value; render(); });
+  document.getElementById('btn-new-log').addEventListener('click', function () { openLogModal(null); });
+
+  /* ---------- Lọc & render ---------- */
+  function excerpt(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+
+  function filtered() {
+    const q = state.q.toLowerCase();
+    return logs.filter(function (l) {
+      if (state.seasonId && l.seasonId !== state.seasonId) return false;
+      if (state.fieldId && l.fieldId !== state.fieldId) return false;
+      if (state.type && l.type !== state.type) return false;
+      if (q && (l.title + ' ' + l.note).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+  }
+
+  function logItemHtml(l) {
+    const season = seasonById[l.seasonId] || {};
+    const field = fieldById[l.fieldId] || {};
+    const dot = l.type === 'issue' ? 'timeline__dot--danger' : (l.type === 'note' ? 'timeline__dot--warning' : '');
+    return '<div class="timeline__item">' +
+      '<span class="timeline__dot ' + dot + '"></span>' +
+      '<div class="timeline__date">' + ui.fmtDate(l.date) + '</div>' +
+      '<div class="timeline__title">' + ui.escapeHtml(l.title) + '</div>' +
+      '<div class="row" style="margin:5px 0">' +
+        '<span class="tag">' + TYPE_LABEL[l.type] + '</span>' +
+        (l.issueType ? ' ' + ui.badge(l.issueType) : '') +
+        '<span class="small muted">' + ui.escapeHtml(field.name || '—') + ' · ' + ui.escapeHtml(season.name || '—') + '</span>' +
+      '</div>' +
+      '<p class="timeline__desc">' + ui.escapeHtml(excerpt(l.note, 150)) + '</p>' +
+      ((l.images && l.images.length) ? '<div class="small muted" style="margin-top:4px">' + ui.icon('image') + ' ' + l.images.length + ' ảnh đính kèm</div>' : '') +
+      '<div class="row" style="margin-top:10px">' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-act="view" data-id="' + l.id + '">' + ui.icon('eye') + ' Xem</button>' +
+        '<button type="button" class="btn btn--ghost btn--sm" data-act="edit" data-id="' + l.id + '">' + ui.icon('edit') + ' Sửa</button>' +
+        '<button type="button" class="btn btn--danger-soft btn--sm" data-act="del" data-id="' + l.id + '">' + ui.icon('trash') + ' Xóa</button>' +
+      '</div></div>';
+  }
+
+  function render() {
+    const list = filtered();
+    countEl.textContent = list.length + ' nhật ký';
+    if (!list.length) {
+      if (logs.length) {
+        listBox.innerHTML = ui.emptyState({
+          icon: 'search', title: 'Không có nhật ký phù hợp',
+          desc: 'Thử đổi từ khóa tìm kiếm hoặc điều chỉnh bộ lọc mùa vụ / đồng ruộng / loại nhật ký.',
+          action: '<button type="button" class="btn btn--secondary" id="btn-clear-filter">' + ui.icon('filter') + ' Xóa bộ lọc</button>'
+        });
+        const cb = document.getElementById('btn-clear-filter');
+        if (cb) cb.addEventListener('click', clearFilters);
+      } else {
+        listBox.innerHTML = ui.emptyState({
+          icon: 'file', title: 'Chưa có nhật ký nào',
+          desc: 'Bắt đầu ghi lại hoạt động, ghi chú hoặc sự cố trên đồng ruộng của bạn — dữ liệu này giúp AI tổng hợp mùa vụ.',
+          action: '<button type="button" class="btn btn--primary" id="btn-empty-new">' + ui.icon('plus') + ' Ghi nhật ký đầu tiên</button>'
+        });
+        const nb = document.getElementById('btn-empty-new');
+        if (nb) nb.addEventListener('click', function () { openLogModal(null); });
+      }
+    } else {
+      listBox.innerHTML = '<div class="card"><div class="timeline">' + list.map(logItemHtml).join('') + '</div></div>';
+    }
+    renderPhotos(list);
+  }
+
+  function clearFilters() {
+    state.q = ''; state.seasonId = ''; state.fieldId = ''; state.type = '';
+    searchEl.value = ''; seasonSel.value = ''; fieldSel.value = ''; typeSel.value = '';
+    render();
+  }
+
+  /* ---------- Thư viện ảnh ---------- */
+  function renderPhotos(list) {
+    currentPhotos = [];
+    list.forEach(function (l) {
+      (l.images || []).forEach(function (label) { currentPhotos.push({ log: l, label: label, seed: currentPhotos.length }); });
+    });
+    if (!currentPhotos.length) {
+      photoBox.innerHTML = ui.emptyState({
+        icon: 'image', title: 'Chưa có ảnh nào',
+        desc: 'Ảnh đính kèm trong các nhật ký sẽ được sưu tầm tại đây. Ghi nhật ký mới và đính kèm ảnh để xây dựng thư viện hiện trường.'
+      });
+      return;
+    }
+    photoBox.innerHTML = '<div class="gallery">' + currentPhotos.map(function (it, i) {
+      return '<figure class="gallery__item" data-photo="' + i + '">' +
+        '<img src="' + ui.placeholder(it.label, it.seed, 400, 300) + '" alt="' + ui.escapeHtml(it.label) + '">' +
+        '<figcaption class="gallery__cap">' + ui.escapeHtml(it.log.title) + ' · ' + ui.fmtDate(it.log.date) + '</figcaption></figure>';
+    }).join('') + '</div>';
+  }
+
+  photoBox.addEventListener('click', function (e) {
+    const fig = e.target.closest('[data-photo]');
+    if (!fig) return;
+    const it = currentPhotos[parseInt(fig.getAttribute('data-photo'), 10)];
+    if (!it) return;
+    ui.openModal({
+      title: it.label,
+      body: '<img src="' + ui.placeholder(it.label, it.seed, 800, 600) + '" alt="' + ui.escapeHtml(it.label) + '" style="border-radius:8px">' +
+        '<p class="small muted" style="margin:10px 0 0">' + ui.escapeHtml(it.log.title) + ' · ' + ui.fmtDate(it.log.date) + '</p>'
+    });
+  });
+
+  /* ---------- Tải dữ liệu ---------- */
+  async function loadLogs() {
+    listBox.innerHTML = ui.skeletonList(4);
+    photoBox.innerHTML = ui.skeletonList(2);
+    countEl.textContent = '';
+    try {
+      const all = await api.list('fieldLogs');
+      logs = all.filter(function (l) { return myFieldIds.indexOf(l.fieldId) >= 0; });
+      render();
+    } catch (e) {
+      listBox.innerHTML = ui.errorState(e.message);
+      photoBox.innerHTML = '';
+      bindRetry(loadLogs);
+    }
+  }
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Hành động trên danh sách ---------- */
+  listBox.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const act = btn.getAttribute('data-act');
+    if (act === 'view') viewLog(id);
+    else if (act === 'edit') openLogModal(logs.filter(function (l) { return l.id === id; })[0] || null);
+    else if (act === 'del') deleteLog(id);
+  });
+
+  function viewLog(id) {
+    const l = logs.filter(function (x) { return x.id === id; })[0];
+    if (!l) return;
+    const season = seasonById[l.seasonId] || {};
+    const field = fieldById[l.fieldId] || {};
+    const imgs = l.images || [];
+    const body =
+      '<dl class="detail-list">' +
+        '<dt>Ngày</dt><dd>' + ui.fmtDate(l.date) + '</dd>' +
+        '<dt>Loại</dt><dd><span class="tag">' + TYPE_LABEL[l.type] + '</span>' + (l.issueType ? ' ' + ui.badge(l.issueType) : '') + '</dd>' +
+        '<dt>Mùa vụ</dt><dd>' + ui.escapeHtml(season.name || '—') + '</dd>' +
+        '<dt>Đồng ruộng</dt><dd>' + ui.escapeHtml(field.name || '—') + '</dd>' +
+      '</dl>' +
+      '<hr class="divider">' +
+      '<p style="white-space:pre-line;margin:0">' + ui.escapeHtml(l.note) + '</p>' +
+      (imgs.length
+        ? '<h4 style="margin:14px 0 8px">Ảnh hiện trường (' + imgs.length + ')</h4>' +
+          '<div class="gallery">' + imgs.map(function (label, i) {
+            return '<figure class="gallery__item" data-zoom="' + i + '"><img src="' + ui.placeholder(label, i, 400, 300) + '" alt="' + ui.escapeHtml(label) + '"><figcaption class="gallery__cap">' + ui.escapeHtml(label) + '</figcaption></figure>';
+          }).join('') + '</div>'
+        : '');
+    const bd = ui.openModal({
+      title: l.title, size: 'lg', body: body,
+      footer: '<button type="button" class="btn btn--secondary" data-close>Đóng</button>'
+    });
+    bd.addEventListener('click', function (e) {
+      const fig = e.target.closest('[data-zoom]');
+      if (!fig) return;
+      const label = imgs[parseInt(fig.getAttribute('data-zoom'), 10)];
+      ui.openModal({ title: label, body: '<img src="' + ui.placeholder(label, 0, 800, 600) + '" alt="' + ui.escapeHtml(label) + '" style="border-radius:8px">' });
+    });
+  }
+
+  async function deleteLog(id) {
+    const l = logs.filter(function (x) { return x.id === id; })[0];
+    if (!l) return;
+    const ok = await ui.confirmModal({
+      title: 'Xóa nhật ký',
+      message: 'Xóa vĩnh viễn nhật ký "' + ui.escapeHtml(l.title) + '"? Thao tác này không thể hoàn tác.',
+      okText: 'Xóa nhật ký', danger: true
+    });
+    if (!ok) return;
+    try {
+      await api.remove('fieldLogs', id);
+      ui.toast('Đã xóa nhật ký.', 'success');
+      loadLogs();
+    } catch (e) {
+      ui.toast('Không xóa được: ' + ui.escapeHtml(e.message), 'error');
+    }
+  }
+
+  /* ---------- Modal tạo / sửa nhật ký (dùng chung) ---------- */
+  function logFormHtml(log) {
+    const isEdit = !!log;
+    const l = log || { seasonId: state.seasonId || '', type: 'note', title: '', note: '', date: ui.todayISO(), issueType: '', images: [] };
+    return '<form id="log-form" novalidate>' +
+      '<div class="field">' +
+        '<label class="field__label" for="lf-season">Mùa vụ <span class="req">*</span></label>' +
+        '<select class="select" id="lf-season" name="seasonId" data-rules="required">' +
+          '<option value="">— Chọn mùa vụ —</option>' +
+          mySeasons.map(function (s) {
+            return '<option value="' + s.id + '"' + (l.seasonId === s.id ? ' selected' : '') + '>' + ui.escapeHtml(s.name) + ' · ' + ui.escapeHtml((fieldById[s.fieldId] || {}).name || '') + '</option>';
+          }).join('') +
+        '</select><div class="field__error"></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="field">' +
+          '<label class="field__label" for="lf-type">Loại nhật ký <span class="req">*</span></label>' +
+          '<select class="select" id="lf-type" name="type" data-rules="required">' +
+            '<option value="">— Chọn loại —</option>' +
+            '<option value="note"' + (l.type === 'note' ? ' selected' : '') + '>Ghi chú</option>' +
+            '<option value="activity"' + (l.type === 'activity' ? ' selected' : '') + '>Hoạt động</option>' +
+            '<option value="issue"' + (l.type === 'issue' ? ' selected' : '') + '>Sự cố</option>' +
+          '</select><div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field" id="lf-issue-wrap" style="' + (l.type === 'issue' ? '' : 'display:none') + '">' +
+          '<label class="field__label" for="lf-issue">Nhóm vấn đề <span class="req">*</span></label>' +
+          '<select class="select" id="lf-issue" name="issueType" data-rules="required"' + (l.type === 'issue' ? '' : ' disabled') + '>' +
+            '<option value="">— Chọn nhóm vấn đề —</option>' +
+            ISSUE_TYPES.map(function (t) { return '<option value="' + t + '"' + (l.issueType === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
+          '</select><div class="field__error"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="lf-title">Tiêu đề <span class="req">*</span></label>' +
+        '<input class="input" id="lf-title" name="title" data-rules="required" value="' + ui.escapeHtml(l.title) + '" placeholder="VD: Rầy nâu bùng phát ở chân ruộng">' +
+        '<div class="field__error"></div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="lf-note">Nội dung <span class="req">*</span></label>' +
+        '<textarea class="textarea" id="lf-note" name="note" data-rules="required|min20" placeholder="Mô tả chi tiết hiện trạng, số liệu quan sát, thời điểm thực hiện...">' + ui.escapeHtml(l.note) + '</textarea>' +
+        '<div class="field__error"></div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="lf-date">Ngày ghi nhận <span class="req">*</span></label>' +
+        '<input class="input" id="lf-date" name="date" type="date" data-rules="required|date" value="' + ui.escapeHtml(l.date) + '">' +
+        '<div class="field__error"></div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="lf-images">Ảnh hiện trường</label>' +
+        '<input class="input" id="lf-images" type="file" accept="image/*" multiple>' +
+        '<div class="field__hint">Nguyên mẫu: chỉ lưu tên tệp ảnh.' + (isEdit && l.images.length ? ' Ảnh hiện có: ' + l.images.map(function (n) { return ui.escapeHtml(n); }).join(', ') + '.' : '') + '</div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button type="submit" class="btn btn--primary" id="lf-submit">' + (isEdit ? 'Lưu thay đổi' : 'Ghi nhật ký') + '</button>' +
+        '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+      '</div>' +
+    '</form>';
+  }
+
+  function openLogModal(log) {
+    const bd = ui.openModal({
+      title: log ? 'Sửa nhật ký' : 'Ghi nhật ký mới',
+      size: 'lg',
+      body: logFormHtml(log)
+    });
+    const form = bd.querySelector('#log-form');
+    ui.bindLiveValidation(form);
+    const typeSelEl = bd.querySelector('#lf-type');
+    const issueWrap = bd.querySelector('#lf-issue-wrap');
+    const issueSelEl = bd.querySelector('#lf-issue');
+    typeSelEl.addEventListener('change', function () {
+      const isIssue = typeSelEl.value === 'issue';
+      issueWrap.style.display = isIssue ? '' : 'none';
+      issueSelEl.disabled = !isIssue;
+    });
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      const btn = bd.querySelector('#lf-submit');
+      btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      const data = ui.serializeForm(form);
+      const season = seasonById[data.seasonId] || {};
+      const newImages = Array.from(bd.querySelector('#lf-images').files).map(function (f) { return f.name; });
+      const payload = {
+        seasonId: data.seasonId,
+        fieldId: season.fieldId || (log ? log.fieldId : ''),
+        type: data.type,
+        issueType: data.type === 'issue' ? data.issueType : null,
+        title: data.title,
+        note: data.note,
+        date: data.date,
+        images: newImages.length ? newImages : (log ? (log.images || []) : [])
+      };
+      try {
+        if (log) {
+          await api.update('fieldLogs', log.id, payload);
+          ui.toast('Đã cập nhật nhật ký.', 'success');
+        } else {
+          await api.create('fieldLogs', payload);
+          ui.toast('Đã ghi nhật ký mới.', 'success');
+        }
+        ui.closeModal();
+        loadLogs();
+      } catch (err) {
+        ui.toast('Không lưu được: ' + ui.escapeHtml(err.message), 'error');
+        btn.disabled = false;
+        btn.innerHTML = log ? 'Lưu thay đổi' : 'Ghi nhật ký';
+      }
+    });
+  }
+
+  /* Boot */
+  ui.initTabs(document);
+  loadLogs();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     TRANG: Yêu cầu hỗ trợ (farmer-help-request.html)
+     C/R/U/D yêu cầu tư vấn + AI-1 phân loại vấn đề (2 pha).
+     Nông dân chỉ thấy yêu cầu của chính mình (farmerId = current).
+     ============================================================ -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yêu cầu hỗ trợ – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="farmer" data-page="farmer-help-request.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Yêu cầu hỗ trợ</h1>
+      <p>Gửi yêu cầu tư vấn tới chuyên gia — AI sẽ phân loại vấn đề giúp bạn ngay khi tạo yêu cầu.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-new-request">Tạo yêu cầu mới</button>
+    </div>
+  </div>
+
+  <!-- Bộ lọc -->
+  <div class="filter-bar">
+    <div class="filter-bar__search">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input class="input" type="search" id="f-search" placeholder="Tìm theo tiêu đề, mô tả..." aria-label="Tìm kiếm yêu cầu">
+    </div>
+    <select class="select" id="f-status" aria-label="Lọc theo trạng thái"></select>
+    <select class="select" id="f-priority" aria-label="Lọc theo mức ưu tiên"></select>
+    <span class="filter-bar__count" id="f-count"></span>
+  </div>
+
+  <!-- Danh sách yêu cầu -->
+  <div id="request-list"></div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/modules/ai.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api, ai = CM.ai;
+  const me = api.current();
+  if (!me) return;
+
+  /* ---------- Dữ liệu nền ---------- */
+  const fields = api.read('fields');
+  const farms = api.read('farms').filter(function (f) { return f.ownerId === me.id; });
+  const myFieldIds = farms.length
+    ? fields.filter(function (d) { return farms.some(function (f) { return f.id === d.farmId; }); }).map(function (d) { return d.id; })
+    : fields.map(function (d) { return d.id; }); /* dữ liệu mẫu: hiển thị tất cả nếu chưa có nông hộ */
+  const myFields = fields.filter(function (d) { return myFieldIds.indexOf(d.id) >= 0; });
+  const mySeasons = api.read('seasons').filter(function (s) { return myFieldIds.indexOf(s.fieldId) >= 0; });
+  const fieldById = {}; fields.forEach(function (d) { fieldById[d.id] = d; });
+  const seasonById = {}; api.read('seasons').forEach(function (s) { seasonById[s.id] = s; });
+  const userById = {}; api.read('users').forEach(function (u) { userById[u.id] = u; });
+  const resourceById = {}; api.read('resources').forEach(function (r) { resourceById[r.id] = r; });
+
+  const ISSUE_TYPES = ['sâu bệnh', 'dinh dưỡng', 'tưới tiêu', 'đất', 'thời tiết', 'khác'];
+  const urlSeason = new URLSearchParams(location.search).get('season');
+
+  let requests = [];
+  const state = { q: '', status: '', priority: '' };
+  let draft = null; /* dữ liệu form tạo yêu cầu (giữ lại khi quay lại pha 1) */
+
+  /* ---------- DOM ---------- */
+  const listBox = document.getElementById('request-list');
+  const countEl = document.getElementById('f-count');
+  const searchEl = document.getElementById('f-search');
+  const statusSel = document.getElementById('f-status');
+  const prioritySel = document.getElementById('f-priority');
+
+  /* ---------- Tùy chọn bộ lọc ---------- */
+  statusSel.innerHTML = '<option value="">Tất cả trạng thái</option>' +
+    ['pending', 'assigned', 'resolved', 'rejected', 'cancelled'].map(function (s) {
+      return '<option value="' + s + '">' + ui.statusLabel(s) + '</option>';
+    }).join('');
+  prioritySel.innerHTML = '<option value="">Tất cả mức ưu tiên</option>' +
+    ['high', 'medium', 'low'].map(function (p) {
+      return '<option value="' + p + '">' + ui.statusLabel(p) + '</option>';
+    }).join('');
+
+  searchEl.addEventListener('input', ui.debounce(function () { state.q = searchEl.value.trim(); render(); }, 250));
+  statusSel.addEventListener('change', function () { state.status = statusSel.value; render(); });
+  prioritySel.addEventListener('change', function () { state.priority = prioritySel.value; render(); });
+  document.getElementById('btn-new-request').addEventListener('click', openCreateModal);
+
+  /* ---------- Lọc & render ---------- */
+  function excerpt(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+
+  function filtered() {
+    const q = state.q.toLowerCase();
+    return requests.filter(function (r) {
+      if (state.status && r.status !== state.status) return false;
+      if (state.priority && r.priority !== state.priority) return false;
+      if (q && (r.title + ' ' + r.description).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+
+  function cardHtml(r) {
+    const field = fieldById[r.fieldId] || {};
+    const season = seasonById[r.seasonId] || {};
+    const a = r.aiClassification;
+    let actions = '<button type="button" class="btn btn--secondary btn--sm" data-act="view" data-id="' + r.id + '">' + ui.icon('eye') + ' Chi tiết</button>';
+    if (r.status === 'pending') actions += '<button type="button" class="btn btn--ghost btn--sm" data-act="edit" data-id="' + r.id + '">' + ui.icon('edit') + ' Sửa</button>';
+    if (r.status === 'pending' || r.status === 'assigned') actions += '<button type="button" class="btn btn--danger-soft btn--sm" data-act="cancel" data-id="' + r.id + '">' + ui.icon('ban') + ' Hủy</button>';
+    return '<article class="card">' +
+      '<div class="row row--between">' +
+        '<strong style="font-size:1rem">' + ui.escapeHtml(r.title) + '</strong>' +
+        '<span class="row" style="gap:6px">' + ui.badge(r.status) + ui.badge(r.priority) + '</span>' +
+      '</div>' +
+      '<div class="small muted" style="margin-top:2px">' + ui.escapeHtml(field.name || '—') + ' · ' + ui.escapeHtml(season.name || '—') + ' · Tạo ngày ' + ui.fmtDate(r.createdAt) + '</div>' +
+      (a ? '<div style="margin-top:8px"><span class="tag">AI: ' + ui.escapeHtml(a.category) + ' · ' + Math.round(a.confidence * 100) + '%</span></div>' : '') +
+      '<p class="muted" style="margin:8px 0 12px">' + ui.escapeHtml(excerpt(r.description, 120)) + '</p>' +
+      '<div class="row">' + actions + '</div>' +
+    '</article>';
+  }
+
+  function render() {
+    const list = filtered();
+    countEl.textContent = list.length + ' yêu cầu';
+    if (!list.length) {
+      if (requests.length) {
+        listBox.innerHTML = ui.emptyState({
+          icon: 'search', title: 'Không có yêu cầu phù hợp',
+          desc: 'Thử đổi từ khóa tìm kiếm hoặc điều chỉnh bộ lọc trạng thái / mức ưu tiên.',
+          action: '<button type="button" class="btn btn--secondary" id="btn-clear-filter">' + ui.icon('filter') + ' Xóa bộ lọc</button>'
+        });
+        const cb = document.getElementById('btn-clear-filter');
+        if (cb) cb.addEventListener('click', clearFilters);
+      } else {
+        listBox.innerHTML = ui.emptyState({
+          icon: 'inbox', title: 'Chưa có yêu cầu hỗ trợ nào',
+          desc: 'Khi đồng ruộng gặp vấn đề khó xử lý, tạo yêu cầu để chuyên gia của CropMate AI đồng hành cùng bạn.',
+          action: '<button type="button" class="btn btn--primary" id="btn-empty-new">' + ui.icon('plus') + ' Tạo yêu cầu đầu tiên</button>'
+        });
+        const nb = document.getElementById('btn-empty-new');
+        if (nb) nb.addEventListener('click', openCreateModal);
+      }
+      return;
+    }
+    listBox.innerHTML = '<div class="stack">' + list.map(cardHtml).join('') + '</div>';
+  }
+
+  function clearFilters() {
+    state.q = ''; state.status = ''; state.priority = '';
+    searchEl.value = ''; statusSel.value = ''; prioritySel.value = '';
+    render();
+  }
+
+  /* ---------- Tải dữ liệu ---------- */
+  async function loadRequests() {
+    listBox.innerHTML = ui.skeletonList(3);
+    countEl.textContent = '';
+    try {
+      const all = await api.list('helpRequests');
+      /* Nông dân chỉ thấy yêu cầu của chính mình */
+      requests = all.filter(function (r) { return r.farmerId === me.id; })
+        .sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      render();
+    } catch (e) {
+      listBox.innerHTML = ui.errorState(e.message);
+      bindRetry(loadRequests);
+    }
+  }
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Hành động trên danh sách ---------- */
+  listBox.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const act = btn.getAttribute('data-act');
+    if (act === 'view') viewRequest(id);
+    else if (act === 'edit') editRequest(id);
+    else if (act === 'cancel') cancelRequest(id);
+  });
+
+  function viewRequest(id) {
+    const r = requests.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    const field = fieldById[r.fieldId] || {};
+    const season = seasonById[r.seasonId] || {};
+    let body =
+      '<dl class="detail-list">' +
+        '<dt>Đồng ruộng</dt><dd>' + ui.escapeHtml(field.name || '—') + '</dd>' +
+        '<dt>Mùa vụ</dt><dd>' + ui.escapeHtml(season.name || '—') + '</dd>' +
+        '<dt>Ngày tạo</dt><dd>' + ui.fmtDate(r.createdAt) + '</dd>' +
+        '<dt>Trạng thái</dt><dd>' + ui.badge(r.status) + '</dd>' +
+        '<dt>Ưu tiên</dt><dd>' + ui.badge(r.priority) + '</dd>' +
+      '</dl>' +
+      '<hr class="divider">' +
+      '<h4 style="margin:0 0 6px">Mô tả triệu chứng</h4>' +
+      '<p style="white-space:pre-line;margin:0">' + ui.escapeHtml(r.description) + '</p>';
+    if (r.aiClassification) {
+      const a = r.aiClassification;
+      const low = a.confidence < 0.6;
+      body += '<div class="ai-result" style="margin-top:14px">' +
+        '<div class="ai-result__title">' + ui.icon('leaf') + ' Phân loại AI: ' + ui.escapeHtml(a.category) +
+        ' <span class="confidence' + (low ? ' confidence--low' : '') + '">' + Math.round(a.confidence * 100) + '%</span>' +
+        (low ? ' <span class="small" style="color:var(--warning);font-weight:600">AI chưa chắc chắn về kết quả này</span>' : '') +
+        '</div>' +
+        '<div class="ai-result__why">' + ui.escapeHtml(a.why) + '</div></div>';
+    }
+    if (r.response) {
+      const ex = userById[r.response.expertId] || { name: 'Chuyên gia' };
+      const resList = (r.response.resourceIds || []).map(function (rid) { return resourceById[rid]; }).filter(Boolean);
+      body += '<div class="card" style="box-shadow:none;margin-top:14px;background:var(--green-50)">' +
+        '<div class="card__head" style="margin-bottom:8px"><h4 style="margin:0">' + ui.icon('users') + ' Phản hồi của chuyên gia</h4></div>' +
+        '<p class="small muted" style="margin:0 0 8px">' + ui.escapeHtml(ex.name) + ' · ' + ui.fmtDate(r.response.respondedAt) + '</p>' +
+        '<p style="margin:0 0 10px;white-space:pre-line">' + ui.escapeHtml(r.response.message) + '</p>' +
+        (resList.length
+          ? '<div class="small muted" style="margin:0 0 4px">Tài nguyên gắn kèm:</div>' +
+            '<ul style="padding-left:20px;margin:0">' + resList.map(function (rs) {
+              return '<li>' + ui.icon('book') + ' ' + ui.escapeHtml(rs.title) + ' <span class="tag">' + ui.escapeHtml(rs.type) + '</span></li>';
+            }).join('') + '</ul>'
+          : '') +
+      '</div>';
+    }
+    ui.openModal({
+      title: r.title, size: 'lg', body: body,
+      footer: '<button type="button" class="btn btn--secondary" data-close>Đóng</button>'
+    });
+  }
+
+  function editRequest(id) {
+    const r = requests.filter(function (x) { return x.id === id; })[0];
+    if (!r || r.status !== 'pending') return;
+    const body =
+      '<form id="req-edit-form" novalidate>' +
+        '<div class="field">' +
+          '<label class="field__label" for="re-title">Tiêu đề <span class="req">*</span></label>' +
+          '<input class="input" id="re-title" name="title" data-rules="required" value="' + ui.escapeHtml(r.title) + '">' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="re-desc">Mô tả triệu chứng <span class="req">*</span></label>' +
+          '<textarea class="textarea" id="re-desc" name="description" data-rules="required|min20">' + ui.escapeHtml(r.description) + '</textarea>' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="row">' +
+          '<button type="submit" class="btn btn--primary" id="re-submit">Lưu thay đổi</button>' +
+          '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+        '</div>' +
+      '</form>';
+    const bd = ui.openModal({ title: 'Sửa yêu cầu hỗ trợ', body: body });
+    const form = bd.querySelector('#req-edit-form');
+    ui.bindLiveValidation(form);
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      const btn = bd.querySelector('#re-submit');
+      btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        const data = ui.serializeForm(form);
+        await api.update('helpRequests', r.id, { title: data.title, description: data.description });
+        ui.closeModal();
+        ui.toast('Đã cập nhật yêu cầu.', 'success');
+        loadRequests();
+      } catch (err) {
+        ui.toast('Không lưu được: ' + ui.escapeHtml(err.message), 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Lưu thay đổi';
+      }
+    });
+  }
+
+  async function cancelRequest(id) {
+    const r = requests.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    if (r.status !== 'pending' && r.status !== 'assigned') return;
+    const ok = await ui.confirmModal({
+      title: 'Hủy yêu cầu',
+      message: 'Hủy yêu cầu này?',
+      okText: 'Hủy yêu cầu', danger: true
+    });
+    if (!ok) return;
+    try {
+      await api.update('helpRequests', id, { status: 'cancelled' });
+      ui.toast('Đã hủy yêu cầu.', 'success');
+      loadRequests();
+    } catch (e) {
+      ui.toast('Không hủy được: ' + ui.escapeHtml(e.message), 'error');
+    }
+  }
+
+  /* ================= TẠO YÊU CẦU (2 pha, kèm AI-1) ================= */
+  function openCreateModal() {
+    draft = {
+      fieldId: '', seasonId: (urlSeason && seasonById[urlSeason]) ? urlSeason : '',
+      title: '', description: '', aiMode: 'ok'
+    };
+    renderPhase1();
+  }
+
+  function phase1Html() {
+    return '<form id="req-create-form" novalidate>' +
+      '<div class="form-row">' +
+        '<div class="field">' +
+          '<label class="field__label" for="rc-field">Đồng ruộng <span class="req">*</span></label>' +
+          '<select class="select" id="rc-field" name="fieldId" data-rules="required">' +
+            '<option value="">— Chọn đồng ruộng —</option>' +
+            myFields.map(function (d) {
+              return '<option value="' + d.id + '"' + (draft.fieldId === d.id ? ' selected' : '') + '>' + ui.escapeHtml(d.name) + '</option>';
+            }).join('') +
+          '</select><div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="rc-season">Mùa vụ <span class="req">*</span></label>' +
+          '<select class="select" id="rc-season" name="seasonId" data-rules="required">' +
+            '<option value="">— Chọn mùa vụ —</option>' +
+            mySeasons.map(function (s) {
+              return '<option value="' + s.id + '"' + (draft.seasonId === s.id ? ' selected' : '') + '>' + ui.escapeHtml(s.name) + ' · ' + ui.escapeHtml((fieldById[s.fieldId] || {}).name || '') + '</option>';
+            }).join('') +
+          '</select><div class="field__error"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="rc-title">Tiêu đề <span class="req">*</span></label>' +
+        '<input class="input" id="rc-title" name="title" data-rules="required" value="' + ui.escapeHtml(draft.title) + '" placeholder="VD: Lá vàng chân ruộng sau bón phân">' +
+        '<div class="field__error"></div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="rc-desc">Mô tả triệu chứng <span class="req">*</span></label>' +
+        '<textarea class="textarea" id="rc-desc" name="description" data-rules="required|min20" placeholder="Mô tả dấu hiệu bất thường, vị trí, tỷ lệ cây bị ảnh hưởng, thời điểm phát hiện...">' + ui.escapeHtml(draft.description) + '</textarea>' +
+        '<div class="field__hint">Càng chi tiết, AI phân loại càng chính xác (tối thiểu 20 ký tự).</div>' +
+        '<div class="field__error"></div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field__label" for="rc-mode">Mô phỏng AI</label>' +
+        '<select class="select" id="rc-mode" name="aiMode">' +
+          '<option value="ok"' + (draft.aiMode === 'ok' ? ' selected' : '') + '>Thành công</option>' +
+          '<option value="insufficient"' + (draft.aiMode === 'insufficient' ? ' selected' : '') + '>Thiếu dữ liệu</option>' +
+          '<option value="uncertain"' + (draft.aiMode === 'uncertain' ? ' selected' : '') + '>AI không chắc chắn</option>' +
+          '<option value="network"' + (draft.aiMode === 'network' ? ' selected' : '') + '>Lỗi mạng</option>' +
+        '</select>' +
+        '<div class="field__hint">Chọn kịch bản mô phỏng để xem cách hệ thống xử lý từng trường hợp.</div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button type="submit" class="btn btn--primary">' + ui.icon('leaf') + ' Phân loại bằng AI</button>' +
+        '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+      '</div>' +
+    '</form>';
+  }
+
+  function renderPhase1() {
+    const bd = ui.openModal({ title: 'Tạo yêu cầu mới', size: 'lg', body: phase1Html() });
+    const form = bd.querySelector('#req-create-form');
+    ui.bindLiveValidation(form);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      draft = ui.serializeForm(form);
+      runClassify();
+    });
+  }
+
+  /* ----- Pha 2: gọi AI ----- */
+  function runClassify() {
+    const body = document.querySelector('#cm-modal .modal__body');
+    if (!body || !draft) return;
+    body.innerHTML =
+      '<div class="ai-processing" role="status"><span class="spinner"></span><div>' +
+        '<strong>AI đang phân tích triệu chứng...</strong>' +
+        '<ul class="ai-steps">' +
+          '<li class="is-done">Đọc mô tả triệu chứng (' + draft.description.trim().length + ' ký tự)</li>' +
+          '<li class="is-current">So khớp từ khóa bệnh / tác nhân</li>' +
+          '<li>Tính độ tin cậy &amp; giải thích</li>' +
+        '</ul></div></div>';
+    ai.classifyIssue(draft.description, { mode: draft.aiMode }).then(function (res) {
+      renderClassifyResult(body, res);
+    }).catch(function (err) {
+      renderClassifyError(body, err);
+    });
+  }
+
+  function renderClassifyResult(body, res) {
+    const low = res.confidence < 0.6;
+    body.innerHTML =
+      '<div class="ai-result">' +
+        '<div class="ai-result__title">' + ui.icon('check') + ' Phân loại: ' + ui.escapeHtml(res.category) +
+          ' <span class="confidence' + (low ? ' confidence--low' : '') + '">' + Math.round(res.confidence * 100) + '%</span>' +
+          (low ? ' <span class="small" style="color:var(--warning);font-weight:600">AI chưa chắc chắn về kết quả này</span>' : '') +
+        '</div>' +
+        '<div class="ai-result__why">' + ui.escapeHtml(res.why) + '</div>' +
+        '<p class="small" style="margin:8px 0"><strong>Gợi ý:</strong> ' + ui.escapeHtml(res.suggestions) + '</p>' +
+        '<p class="small muted" style="margin:0">' + ui.escapeHtml(res.disclaimer) + '</p>' +
+        '<div class="field" id="manual-cat-wrap" style="display:none;margin:12px 0 0">' +
+          '<label class="field__label" for="manual-cat">Chọn nhóm vấn đề</label>' +
+          '<select class="select" id="manual-cat">' +
+            ISSUE_TYPES.map(function (t) { return '<option value="' + t + '">' + t + '</option>'; }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="ai-result__actions">' +
+          '<button type="button" class="btn btn--primary btn--sm" data-accept>' + ui.icon('check') + ' Chấp nhận &amp; tạo yêu cầu</button>' +
+          '<button type="button" class="btn btn--secondary btn--sm" data-editcat>' + ui.icon('edit') + ' Sửa phân loại</button>' +
+          '<button type="button" class="btn btn--secondary btn--sm" data-regen>' + ui.icon('refresh') + ' Tạo lại</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-skip>' + ui.icon('x') + ' Bỏ qua AI</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="row" style="margin-top:12px">' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-back>' + ui.icon('arrowL') + ' Quay lại chỉnh sửa</button>' +
+      '</div>';
+
+    body.querySelector('[data-accept]').addEventListener('click', function () {
+      createRequest({ category: res.category, confidence: res.confidence, why: res.why }, this);
+    });
+    body.querySelector('[data-editcat]').addEventListener('click', function () {
+      const wrap = body.querySelector('#manual-cat-wrap');
+      const btn = this;
+      if (wrap.style.display === 'none') {
+        wrap.style.display = '';
+        btn.classList.remove('btn--secondary');
+        btn.classList.add('btn--primary');
+        btn.innerHTML = ui.icon('check') + ' Dùng phân loại đã chọn';
+        body.querySelector('[data-accept]').style.display = 'none';
+      } else {
+        const cat = body.querySelector('#manual-cat').value;
+        createRequest({ category: cat, confidence: 0.5, why: 'Phân loại thủ công bởi người dùng' }, btn);
+      }
+    });
+    body.querySelector('[data-regen]').addEventListener('click', runClassify);
+    body.querySelector('[data-skip]').addEventListener('click', function () { createRequest(null, this); });
+    body.querySelector('[data-back]').addEventListener('click', renderPhase1);
+  }
+
+  function renderClassifyError(body, err) {
+    let acts = '';
+    if (err.code === 'network') {
+      acts += '<button type="button" class="btn btn--primary btn--sm" data-retry>' + ui.icon('refresh') + ' Thử lại</button>';
+    }
+    if (err.code === 'insufficient') {
+      acts += '<button type="button" class="btn btn--secondary btn--sm" data-back>' + ui.icon('edit') + ' Bổ sung mô tả</button>';
+    }
+    acts += '<button type="button" class="btn btn--ghost btn--sm" data-manual>' + ui.icon('edit') + ' Dùng thủ công</button>';
+    body.innerHTML =
+      '<div class="ai-result" style="border-color:#ef9a9a;background:var(--danger-bg)">' +
+        '<div class="ai-result__title">' + ui.icon('alert') + ' AI không phân loại được</div>' +
+        '<p class="muted" style="margin:0 0 10px">' + ui.escapeHtml(err.message) + '</p>' +
+        '<div class="ai-result__actions">' + acts + '</div>' +
+      '</div>' +
+      '<div class="row" style="margin-top:12px">' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-back2>' + ui.icon('arrowL') + ' Quay lại chỉnh sửa</button>' +
+      '</div>';
+    const retry = body.querySelector('[data-retry]');
+    if (retry) retry.addEventListener('click', runClassify);
+    const back = body.querySelector('[data-back]');
+    if (back) back.addEventListener('click', renderPhase1);
+    const back2 = body.querySelector('[data-back2]');
+    if (back2) back2.addEventListener('click', renderPhase1);
+    body.querySelector('[data-manual]').addEventListener('click', function () { createRequest(null, this); });
+  }
+
+  async function createRequest(aiClassification, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang tạo...'; }
+    try {
+      await api.create('helpRequests', {
+        farmerId: me.id,
+        fieldId: draft.fieldId,
+        seasonId: draft.seasonId,
+        title: draft.title,
+        description: draft.description,
+        aiClassification: aiClassification,
+        status: 'pending',
+        priority: 'medium',
+        createdAt: ui.todayISO(),
+        assignedExpertId: null,
+        response: null
+      });
+      draft = null;
+      ui.closeModal();
+      ui.toast('Đã tạo yêu cầu hỗ trợ.', 'success');
+      loadRequests();
+    } catch (e) {
+      ui.toast('Không tạo được yêu cầu: ' + ui.escapeHtml(e.message), 'error');
+      if (btn) { btn.disabled = false; }
+    }
+  }
+
+  /* Boot */
+  loadRequests();
+});
+</script>
+</body>
+</html>

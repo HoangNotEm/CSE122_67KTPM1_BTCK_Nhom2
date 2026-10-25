@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 – Không tìm thấy trang – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<div class="public-page">
+  <nav class="public-nav" aria-label="Điều hướng chính">
+    <a class="brand" href="../index.html"><span class="brand__logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span><span>CropMate AI</span></a>
+    <div class="public-nav__links">
+      <a href="../index.html">Trang chủ</a>
+      <a href="login.html">Đăng nhập</a>
+    </div>
+  </nav>
+
+  <main class="error-page" id="main">
+    <div>
+      <div class="error-page__code">404</div>
+      <h1>Không tìm thấy trang</h1>
+      <p>Đường dẫn không tồn tại hoặc đã bị di chuyển.</p>
+      <p class="small muted" style="margin-top:16px">Có thể bạn đang tìm:</p>
+      <div class="stack" style="max-width:280px;margin:0 auto 18px;text-align:left">
+        <a class="btn btn--secondary btn--block" href="farmer-season-dashboard.html">Tổng quan mùa vụ</a>
+        <a class="btn btn--secondary btn--block" href="expert-request-queue.html">Hàng đợi chuyên gia</a>
+        <a class="btn btn--secondary btn--block" href="../index.html">Trang chủ</a>
+      </div>
+      <button type="button" class="btn btn--primary" id="btn-back">Quay lại</button>
+    </div>
+  </main>
+
+  <footer class="footer">CropMate AI · BTL môn Phát triển ứng dụng Web cơ bản (CSE122) · Nhóm 2 – 67KTPM1</footer>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script>
+document.getElementById('btn-back').addEventListener('click', function () {
+  history.back();
+});
+</script>
+</body>
+</html>

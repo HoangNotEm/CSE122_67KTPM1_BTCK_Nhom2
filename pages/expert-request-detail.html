@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết yêu cầu – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="expert" data-page="expert-request-detail.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1 id="page-title">Chi tiết yêu cầu</h1>
+      <p id="page-sub">Đọc bối cảnh mùa vụ, phân tích bằng AI và soạn phản hồi tư vấn cho nông dân.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn btn--secondary" href="expert-request-queue.html" id="btn-back"></a>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:2fr 1fr; align-items:start;" id="detail-cols">
+    <!-- Cột trái: các card nghiệp vụ -->
+    <div id="left-col">
+      <div class="card">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </div>
+
+    <!-- Cột phải: AI-3 Log Summarizer -->
+    <section class="ai-panel" aria-labelledby="ai3-title">
+      <div class="ai-panel__head">
+        <span class="ai-panel__icon" id="ai3-icon"></span>
+        <div>
+          <h3 id="ai3-title">AI-3 · Tóm tắt diễn biến mùa vụ</h3>
+          <p>Gộp nhanh toàn bộ nhật ký của mùa vụ liên quan để nắm bối cảnh trước khi tư vấn.</p>
+        </div>
+        <div class="ai-panel__mode">
+          <label class="small muted" for="ai3-mode">Mô phỏng:</label>
+          <select id="ai3-mode">
+            <option value="ok">Thành công</option>
+            <option value="insufficient">Thiếu dữ liệu</option>
+            <option value="network">Lỗi mạng</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="btn btn--primary" id="ai3-run">Tóm tắt bằng AI</button>
+      <div id="ai3-output" aria-live="polite"></div>
+      <!-- Tóm tắt đã lưu nằm trong chính yêu cầu (helpRequests.aiSummary),
+           nên vẫn hiển thị sau khi tải lại trang. -->
+      <div id="ai3-saved" aria-live="polite"></div>
+    </section>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/modules/ai.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api, ai = CM.ai;
+  const me = api.current();
+  if (!me) return;
+
+  const reqId = new URLSearchParams(location.search).get('id') || 'r1';
+  const leftCol = document.getElementById('left-col');
+  const out = document.getElementById('ai3-output');
+  const runBtn = document.getElementById('ai3-run');
+  let currentRequest = null;
+  let seasonLogs = [];
+
+  document.getElementById('btn-back').innerHTML = ui.icon('arrowL') + ' Quay lại hàng đợi';
+  document.getElementById('ai3-icon').innerHTML = ui.icon('leaf');
+
+  /* ---------- Dữ liệu nền ---------- */
+  const userById = {};   api.read('users').forEach(function (u) { userById[u.id] = u; });
+  const seasonById = {}; api.read('seasons').forEach(function (s) { seasonById[s.id] = s; });
+  const fieldById = {};  api.read('fields').forEach(function (d) { fieldById[d.id] = d; });
+  const cropById = {};   api.read('crops').forEach(function (c) { cropById[c.id] = c; });
+  const resById = {};    api.read('resources').forEach(function (r) { resById[r.id] = r; });
+  const activeResources = api.read('resources').filter(function (r) { return r.status === 'active'; });
+
+  /* ---------- Tải yêu cầu ---------- */
+  async function loadRequest() {
+    leftCol.innerHTML = '<div class="card"><div class="skeleton skeleton--line w-80"></div>' +
+      '<div class="skeleton skeleton--line w-60"></div><div class="skeleton skeleton--line w-40"></div></div>' +
+      '<div class="card"><div class="skeleton skeleton--line w-80"></div><div class="skeleton skeleton--line w-60"></div></div>';
+    try {
+      const list = await api.list('helpRequests');
+      currentRequest = list.find(function (r) { return r.id === reqId; }) || null;
+      if (!currentRequest) {
+        document.getElementById('detail-cols').style.display = 'block';
+        document.querySelector('.ai-panel').style.display = 'none';
+        leftCol.innerHTML = '<div class="card">' + ui.emptyState({
+          icon: 'search', title: 'Không tìm thấy yêu cầu',
+          desc: 'Yêu cầu "' + ui.escapeHtml(reqId) + '" không tồn tại hoặc đã bị xóa khỏi hệ thống.',
+          action: '<a class="btn btn--primary" href="expert-request-queue.html">' + ui.icon('arrowL') + ' Về hàng đợi yêu cầu</a>'
+        }) + '</div>';
+        return;
+      }
+      const logs = await api.list('fieldLogs');
+      seasonLogs = logs.filter(function (l) { return l.seasonId === currentRequest.seasonId; });
+      renderAll();
+    } catch (e) {
+      leftCol.innerHTML = '<div class="card">' + ui.errorState(e.message) + '</div>';
+      document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', loadRequest); });
+    }
+  }
+
+  function renderAll() {
+    const r = currentRequest;
+    document.getElementById('page-title').textContent = r.title;
+    document.getElementById('page-sub').innerHTML = 'Yêu cầu <strong>#' + ui.escapeHtml(r.id) + '</strong> · tạo ' + ui.fmtDateTime(r.createdAt);
+    leftCol.innerHTML =
+      '<div class="card" id="card-info"></div>' +
+      '<div class="card" id="card-ai"></div>' +
+      '<div class="card" id="card-logs"></div>' +
+      '<div class="card" id="card-response"></div>';
+    renderInfoCard();
+    renderAiCard();
+    renderLogsCard();
+    renderResponseCard();
+    renderSavedSummary();
+  }
+
+  /* ---------- Card 1: Thông tin yêu cầu ---------- */
+  function renderInfoCard() {
+    const r = currentRequest;
+    const farmer = userById[r.farmerId] || { name: '—', phone: '' };
+    const season = seasonById[r.seasonId] || null;
+    const field = fieldById[r.fieldId] || null;
+    const claimBtn = r.status === 'pending'
+      ? '<button type="button" class="btn btn--primary btn--sm" id="btn-claim">' + ui.icon('check') + ' Nhận xử lý</button>'
+      : '';
+
+    document.getElementById('card-info').innerHTML =
+      '<div class="card__head"><h2>Thông tin yêu cầu</h2>' + claimBtn + '</div>' +
+      '<dl class="detail-list">' +
+        '<dt>Trạng thái</dt><dd>' + ui.badge(r.status) + '</dd>' +
+        '<dt>Ưu tiên</dt><dd>' + ui.badge(r.priority) + '</dd>' +
+        '<dt>Nông dân</dt><dd><strong>' + ui.escapeHtml(farmer.name) + '</strong> · ' + ui.escapeHtml(farmer.phone || '—') + '</dd>' +
+        '<dt>Đồng ruộng</dt><dd>' + (field ? ui.escapeHtml(field.name) + ' <span class="muted small">(' + ui.escapeHtml(field.soilType || '') + ')</span>' : '—') + '</dd>' +
+        '<dt>Mùa vụ</dt><dd>' + (season
+          ? ui.escapeHtml(season.name) + ' · giai đoạn <strong>' + ui.escapeHtml(season.stage) + '</strong> · ' + season.progress + '%'
+          : '—') + '</dd>' +
+        '<dt>Ngày tạo</dt><dd>' + ui.fmtDateTime(r.createdAt) + '</dd>' +
+      '</dl>' +
+      '<hr class="divider">' +
+      '<h3 style="font-size:.95rem">Mô tả từ nông dân</h3>' +
+      '<p class="muted" style="margin:0; white-space:pre-line;">' + ui.escapeHtml(r.description) + '</p>';
+
+    const claim = document.getElementById('btn-claim');
+    if (claim) claim.addEventListener('click', async function () {
+      claim.disabled = true;
+      claim.innerHTML = '<span class="btn__spinner"></span> Đang nhận...';
+      try {
+        await api.update('helpRequests', r.id, { status: 'assigned', assignedExpertId: me.id });
+        ui.toast('Đã nhận xử lý yêu cầu này.', 'success');
+        await loadRequest();
+      } catch (err) {
+        ui.toast(err.message, 'error');
+        claim.disabled = false;
+        claim.innerHTML = ui.icon('check') + ' Nhận xử lý';
+      }
+    });
+  }
+
+  /* ---------- Card 2: Phân loại AI ---------- */
+  function renderAiCard() {
+    const r = currentRequest;
+    const box = document.getElementById('card-ai');
+    if (r.aiClassification) {
+      const c = r.aiClassification;
+      box.innerHTML =
+        '<div class="card__head"><h2>Phân loại AI</h2>' +
+        '<span class="confidence' + (c.confidence < 0.6 ? ' confidence--low' : '') + '">' + Math.round(c.confidence * 100) + '% độ tin cậy</span></div>' +
+        '<div class="row"><span class="tag">' + ui.escapeHtml(c.category) + '</span></div>' +
+        '<p style="margin:10px 0 6px">' + ui.escapeHtml(c.why) + '</p>' +
+        '<p class="small muted mb-0">Phân loại tự động lúc nông dân tạo yêu cầu (' + ui.fmtDateTime(r.createdAt) + ').</p>';
+    } else {
+      box.innerHTML =
+        '<div class="card__head"><h2>Phân loại AI</h2></div>' +
+        '<p class="muted mb-0">Nông dân tạo yêu cầu không qua AI — chưa có gợi ý phân loại.</p>';
+    }
+  }
+
+  /* ---------- Card 3: Ảnh hiện trường & nhật ký ---------- */
+  function renderLogsCard() {
+    const box = document.getElementById('card-logs');
+    const sorted = seasonLogs.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    const recent = sorted.slice(0, 5);
+
+    let imgs = [], seed = 0;
+    seasonLogs.forEach(function (l) {
+      (l.images || []).forEach(function (label) { imgs.push({ label: label, seed: seed++ }); });
+    });
+
+    let html = '<div class="card__head"><h2>Ảnh hiện trường &amp; nhật ký liên quan</h2>' +
+      '<span class="small muted">' + seasonLogs.length + ' nhật ký</span></div>';
+
+    if (!seasonLogs.length) {
+      html += ui.emptyState({ icon: 'file', title: 'Chưa có nhật ký', desc: 'Mùa vụ này chưa ghi nhận nhật ký nào — hãy hỏi thêm nông dân khi tư vấn.' });
+    } else {
+      html += '<div class="timeline">' + recent.map(function (l) {
+        const dot = l.type === 'issue' ? 'timeline__dot--danger' : (l.type === 'note' ? 'timeline__dot--warning' : '');
+        return '<div class="timeline__item"><span class="timeline__dot ' + dot + '"></span>' +
+          '<div class="timeline__date">' + ui.fmtDate(l.date) + ' · ' + ui.escapeHtml(l.type) + '</div>' +
+          '<div class="timeline__title">' + ui.escapeHtml(l.title) + '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    if (imgs.length) {
+      html += '<h3 style="font-size:.95rem; margin-top:16px;">Ảnh hiện trường (' + imgs.length + ')</h3>' +
+        '<div class="gallery" id="field-gallery">' + imgs.map(function (im, i) {
+          return '<figure class="gallery__item" data-idx="' + i + '">' +
+            '<img src="' + ui.placeholder(im.label, im.seed) + '" alt="' + ui.escapeHtml(im.label) + '">' +
+            '<figcaption class="gallery__cap">' + ui.escapeHtml(im.label) + '</figcaption></figure>';
+        }).join('') + '</div>';
+    }
+    box.innerHTML = html;
+
+    const gal = document.getElementById('field-gallery');
+    if (gal) gal.addEventListener('click', function (e) {
+      const fig = e.target.closest('.gallery__item');
+      if (!fig) return;
+      const im = imgs[parseInt(fig.getAttribute('data-idx'), 10)];
+      ui.openModal({
+        title: 'Ảnh hiện trường — ' + im.label,
+        size: 'lg',
+        body: '<img src="' + ui.placeholder(im.label, im.seed, 900, 600) + '" alt="' + ui.escapeHtml(im.label) + '" style="width:100%;border-radius:8px;">'
+      });
+    });
+  }
+
+  /* ---------- Card 4: Phản hồi của chuyên gia ---------- */
+  function renderResponseCard() {
+    const r = currentRequest;
+    const box = document.getElementById('card-response');
+
+    if (r.status === 'cancelled') {
+      box.innerHTML =
+        '<div class="card__head"><h2>Phản hồi của chuyên gia</h2></div>' +
+        '<div class="state" style="padding:22px 10px;">' +
+        '<div class="state__icon state__icon--neutral">' + ui.icon('ban') + '</div>' +
+        '<h3>Yêu cầu đã bị hủy bởi nông dân</h3>' +
+        '<p>Không thể soạn phản hồi cho yêu cầu đã hủy.</p></div>';
+      return;
+    }
+
+    if (!r.response) { renderResponseForm(null); return; }
+
+    const resp = r.response;
+    const expert = userById[resp.expertId] || { name: 'Chuyên gia' };
+    const linked = (resp.resourceIds || []).map(function (id) { return resById[id]; }).filter(Boolean);
+    const canEdit = r.status !== 'rejected';
+
+    box.innerHTML =
+      '<div class="card__head"><h2>Phản hồi của chuyên gia</h2>' +
+      (canEdit ? '<button type="button" class="btn btn--secondary btn--sm" id="btn-edit-response">' + ui.icon('edit') + ' Cập nhật phản hồi</button>' : '') +
+      '</div>' +
+      '<div class="row">' +
+        '<span class="avatar">' + ui.initials(expert.name) + '</span>' +
+        '<div><strong>' + ui.escapeHtml(expert.name) + '</strong>' +
+        '<div class="small muted">' + ui.fmtDateTime(resp.respondedAt) + '</div></div>' +
+      '</div>' +
+      '<div style="background:var(--surface-2); border-radius:8px; padding:12px 14px; margin-top:12px;">' +
+        '<p class="mb-0" style="white-space:pre-line;">' + ui.escapeHtml(resp.message) + '</p></div>' +
+      (linked.length
+        ? '<h3 style="font-size:.92rem; margin-top:14px;">Tài nguyên đã gắn kèm</h3>' +
+          '<div class="stack">' + linked.map(function (res) {
+            return '<a href="#" class="row" style="gap:8px;">' + ui.icon(res.type === 'Video' ? 'eye' : res.type === 'Hướng dẫn' ? 'book' : 'file') +
+              '<span><strong class="small">' + ui.escapeHtml(res.title) + '</strong> <span class="tag">' + ui.escapeHtml(res.type) + '</span></span></a>';
+          }).join('') + '</div>'
+        : '');
+
+    const editBtn = document.getElementById('btn-edit-response');
+    if (editBtn) editBtn.addEventListener('click', function () { renderResponseForm(resp); });
+  }
+
+  function renderResponseForm(existing) {
+    const box = document.getElementById('card-response');
+    const isEdit = !!existing;
+    box.innerHTML =
+      '<div class="card__head"><h2>' + (isEdit ? 'Cập nhật phản hồi' : 'Phản hồi của chuyên gia') + '</h2></div>' +
+      '<form id="response-form" novalidate>' +
+        '<div class="field">' +
+          '<label class="field__label" for="resp-message">Nội dung tư vấn <span class="req">*</span></label>' +
+          '<textarea class="textarea" id="resp-message" name="message" data-rules="required|min20" placeholder="Viết hướng dẫn xử lý chi tiết: nguyên nhân, cách xử lý từng bước, lưu ý an toàn...">' +
+            (existing ? ui.escapeHtml(existing.message) : '') + '</textarea>' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label">Tài nguyên gắn kèm</label>' +
+          '<div class="stack" style="max-height:190px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:10px;">' +
+            (activeResources.length ? activeResources.map(function (res) {
+              const checked = existing && (existing.resourceIds || []).indexOf(res.id) >= 0 ? ' checked' : '';
+              return '<label class="checkbox" style="align-items:flex-start;">' +
+                '<input type="checkbox" name="resourceIds" value="' + res.id + '"' + checked + '>' +
+                '<span><strong class="small">' + ui.escapeHtml(res.title) + '</strong><br>' +
+                '<span class="small muted">' + ui.escapeHtml(res.type) + ' · ' + ui.escapeHtml(res.topic) + '</span></span></label>';
+            }).join('') : '<p class="small muted mb-0">Chưa có tài nguyên nào đang hoạt động.</p>') +
+          '</div>' +
+          '<div class="field__hint">Tick chọn bài viết/video giúp nông dân tự tham khảo sau tư vấn.</div>' +
+        '</div>' +
+        '<div class="row">' +
+          '<button type="submit" class="btn btn--primary" id="resp-submit">' + ui.icon('send') + ' ' +
+            (isEdit ? 'Cập nhật phản hồi' : 'Gửi phản hồi & hoàn tất tư vấn') + '</button>' +
+          (isEdit ? '<button type="button" class="btn btn--ghost" id="resp-cancel">Hủy</button>' : '') +
+        '</div>' +
+      '</form>';
+
+    const form = document.getElementById('response-form');
+    ui.bindLiveValidation(form);
+    const cancelBtn = document.getElementById('resp-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', function () { renderResponseCard(); });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      const message = form.querySelector('[name=message]').value.trim();
+      const resourceIds = [];
+      form.querySelectorAll('input[name="resourceIds"]:checked').forEach(function (cb) { resourceIds.push(cb.value); });
+      const submitBtn = document.getElementById('resp-submit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="btn__spinner"></span> Đang gửi...';
+      try {
+        const response = { expertId: me.id, message: message, resourceIds: resourceIds, respondedAt: ui.todayISO() };
+        const patch = isEdit ? { response: response } : { status: 'resolved', response: response };
+        await api.update('helpRequests', currentRequest.id, patch);
+        ui.toast(isEdit ? 'Đã cập nhật phản hồi.' : 'Đã gửi phản hồi & hoàn tất tư vấn.', 'success');
+        await loadRequest();
+      } catch (err) {
+        ui.toast(err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = ui.icon('send') + ' ' + (isEdit ? 'Cập nhật phản hồi' : 'Gửi phản hồi & hoàn tất tư vấn');
+      }
+    });
+  }
+
+  /* ================= AI-3: Log Summarizer ================= */
+  runBtn.addEventListener('click', async function () {
+    const mode = document.getElementById('ai3-mode').value;
+    const season = seasonById[currentRequest.seasonId] || null;
+    const crop = season ? (cropById[season.cropId] || null) : null;
+    runBtn.disabled = true;
+    runBtn.innerHTML = '<span class="btn__spinner"></span> AI đang tóm tắt...';
+    out.innerHTML =
+      '<div class="ai-processing" role="status"><span class="spinner"></span><div><strong>AI đang xử lý...</strong>' +
+      '<ul class="ai-steps">' +
+      '<li class="is-done">Đọc ' + seasonLogs.length + ' nhật ký của mùa vụ</li>' +
+      '<li class="is-current">Sắp xếp sự kiện theo trục thời gian</li>' +
+      '<li>Đối chiếu ngân hàng từ khóa rủi ro</li></ul></div></div>';
+    try {
+      const res = await ai.summarizeSeason(seasonLogs, season, crop, { mode: mode });
+      renderAiResult(res);
+    } catch (err) {
+      renderAiError(err, function () { runBtn.click(); });
+    } finally {
+      runBtn.disabled = false;
+      runBtn.innerHTML = 'Tóm tắt bằng AI';
+    }
+  });
+
+  function renderAiResult(res) {
+    out.innerHTML =
+      '<div class="ai-result">' +
+      '<div class="ai-result__title">' + ui.icon('check') + ' Tóm tắt diễn biến mùa vụ' +
+        (res.edited ? ' <span class="tag">Đã chỉnh sửa</span>' : '') + '</div>' +
+      '<p style="margin:0 0 10px;">' + ui.escapeHtml(res.summary) + '</p>' +
+      (res.highlights && res.highlights.length
+        ? '<strong class="small">Điểm nổi bật</strong><ul style="margin:4px 0 10px;">' +
+          res.highlights.map(function (h) { return '<li>' + ui.escapeHtml(h) + '</li>'; }).join('') + '</ul>'
+        : '') +
+      (res.risks && res.risks.length
+        ? '<strong class="small">Rủi ro cần lưu ý</strong><ul class="stack" style="list-style:none; padding:0; margin:4px 0 10px;">' +
+          res.risks.map(function (risk) {
+            return '<li class="row" style="gap:8px; align-items:flex-start; color:var(--warning);"><span style="flex:none; width:16px; height:16px;">' + ui.icon('alert') + '</span><span style="color:var(--text);">' + ui.escapeHtml(risk) + '</span></li>';
+          }).join('') + '</ul>'
+        : '') +
+      '<div class="ai-result__why">' + ui.escapeHtml(res.why) + '</div>' +
+      '<p class="small muted" style="margin:0;">' + ui.escapeHtml(res.disclaimer) + '</p>' +
+      '<div class="ai-result__actions">' +
+        '<button type="button" class="btn btn--primary btn--sm" data-ai-accept>' + ui.icon('check') + ' Chấp nhận &amp; lưu vào phiên tư vấn</button>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-ai-edit>' + ui.icon('edit') + ' Sửa</button>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-ai-regen>' + ui.icon('refresh') + ' Tạo lại</button>' +
+        '<button type="button" class="btn btn--danger-soft btn--sm" data-ai-reject>' + ui.icon('x') + ' Từ chối</button>' +
+      '</div></div>';
+
+    out.querySelector('[data-ai-accept]').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        await saveSummary({
+          summary: res.summary,
+          highlights: res.highlights || [],
+          risks: res.risks || [],
+          why: res.why,
+          disclaimer: res.disclaimer,
+          edited: !!res.edited
+        });
+      } catch (err) {
+        ui.toast('Không lưu được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+        btn.disabled = false;
+        btn.innerHTML = ui.icon('check') + ' Chấp nhận &amp; lưu vào phiên tư vấn';
+      }
+    });
+    out.querySelector('[data-ai-edit]').addEventListener('click', function () {
+      renderAiEdit(res, function (data) { renderAiResult(data); }, function () { renderAiResult(res); });
+    });
+    out.querySelector('[data-ai-regen]').addEventListener('click', function () { runBtn.click(); });
+    out.querySelector('[data-ai-reject]').addEventListener('click', function () {
+      ui.confirmModal({
+        title: 'Từ chối kết quả AI?',
+        message: 'Kết quả này sẽ bị bỏ, không lưu vào phiên tư vấn. Bạn có thể tạo lại hoặc tự tổng hợp từ nhật ký.',
+        okText: 'Từ chối kết quả',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) return;
+        out.innerHTML = '';
+        ui.toast('Đã bỏ kết quả AI. Bạn có thể tạo lại hoặc tự tổng hợp từ nhật ký.', 'info');
+      });
+    });
+  }
+
+  /* Form sửa dùng cho cả kết quả mới và tóm tắt đã lưu */
+  function renderAiEdit(data, onSave, onCancel) {
+    out.innerHTML =
+      '<div class="ai-result">' +
+        '<div class="ai-result__title">' + ui.icon('edit') + ' Sửa tóm tắt trước khi lưu</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="ai3-edit-summary">Tóm tắt diễn biến</label>' +
+          '<textarea class="textarea" id="ai3-edit-summary" rows="5">' + ui.escapeHtml(data.summary) + '</textarea>' +
+          '<div class="field__hint">Tối thiểu 20 ký tự. Nội dung này sẽ được lưu vào phiên tư vấn của yêu cầu.</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="ai3-edit-risks">Rủi ro cần lưu ý (mỗi dòng một ý)</label>' +
+          '<textarea class="textarea" id="ai3-edit-risks" rows="3">' + ui.escapeHtml((data.risks || []).join('\n')) + '</textarea>' +
+        '</div>' +
+        '<div class="ai-result__actions">' +
+          '<button type="button" class="btn btn--primary btn--sm" data-edit-save>' + ui.icon('check') + ' Lưu thay đổi</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-edit-cancel>Hủy</button>' +
+        '</div>' +
+      '</div>';
+
+    const summaryEl = document.getElementById('ai3-edit-summary');
+    const risksEl = document.getElementById('ai3-edit-risks');
+    out.querySelector('[data-edit-save]').addEventListener('click', function () {
+      const summary = summaryEl.value.trim();
+      if (summary.length < 20) {
+        ui.toast('Tóm tắt cần ít nhất 20 ký tự.', 'warning');
+        summaryEl.focus();
+        return;
+      }
+      const risks = risksEl.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      onSave({
+        summary: summary,
+        highlights: data.highlights || [],
+        risks: risks,
+        why: data.why,
+        disclaimer: data.disclaimer,
+        edited: true
+      });
+    });
+    out.querySelector('[data-edit-cancel]').addEventListener('click', onCancel);
+  }
+
+  async function saveSummary(data) {
+    const payload = {
+      summary: data.summary,
+      highlights: data.highlights || [],
+      risks: data.risks || [],
+      why: data.why,
+      disclaimer: data.disclaimer,
+      edited: !!data.edited,
+      savedBy: me.id,
+      savedAt: ui.todayISO()
+    };
+    await api.update('helpRequests', currentRequest.id, { aiSummary: payload });
+    currentRequest.aiSummary = payload;
+    out.innerHTML = '';
+    renderSavedSummary();
+    ui.toast('Đã lưu tóm tắt AI vào phiên tư vấn của yêu cầu.', 'success');
+  }
+
+  /* Tóm tắt đã lưu: đọc từ currentRequest.aiSummary để hiển thị lại sau khi tải trang */
+  function renderSavedSummary() {
+    const box = document.getElementById('ai3-saved');
+    const s = currentRequest && currentRequest.aiSummary;
+    if (!s) { box.innerHTML = ''; return; }
+    box.innerHTML =
+      '<div class="ai-result" style="margin-top:12px; border-color:#a5d6a7; background:var(--success-bg, #e8f5e9);">' +
+        '<div class="ai-result__title">' + ui.icon('check') + ' Tóm tắt đã lưu trong phiên tư vấn' +
+          (s.edited ? ' <span class="tag">Đã chỉnh sửa</span>' : '') + '</div>' +
+        '<p style="margin:0 0 10px;">' + ui.escapeHtml(s.summary) + '</p>' +
+        (s.highlights && s.highlights.length
+          ? '<strong class="small">Điểm nổi bật</strong><ul style="margin:4px 0 10px;">' +
+            s.highlights.map(function (h) { return '<li>' + ui.escapeHtml(h) + '</li>'; }).join('') + '</ul>'
+          : '') +
+        (s.risks && s.risks.length
+          ? '<strong class="small">Rủi ro cần lưu ý</strong><ul style="margin:4px 0 10px;">' +
+            s.risks.map(function (risk) { return '<li>' + ui.escapeHtml(risk) + '</li>'; }).join('') + '</ul>'
+          : '') +
+        '<p class="small muted" style="margin:8px 0 0;">Lưu vào phiên tư vấn ngày ' + ui.fmtDate(s.savedAt) + '</p>' +
+        '<div class="ai-result__actions">' +
+          '<button type="button" class="btn btn--secondary btn--sm" data-saved-edit>' + ui.icon('edit') + ' Sửa tóm tắt đã lưu</button>' +
+          '<button type="button" class="btn btn--danger-soft btn--sm" data-saved-reject>' + ui.icon('x') + ' Từ chối tóm tắt</button>' +
+        '</div>' +
+      '</div>';
+
+    box.querySelector('[data-saved-edit]').addEventListener('click', function () {
+      const draft = {
+        summary: s.summary, highlights: s.highlights, risks: s.risks,
+        why: s.why, disclaimer: s.disclaimer
+      };
+      box.innerHTML = '';
+      renderAiEdit(draft, async function (data) {
+        const payload = {
+          summary: data.summary,
+          highlights: data.highlights || [],
+          risks: data.risks || [],
+          why: data.why,
+          disclaimer: data.disclaimer,
+          edited: true,
+          savedBy: s.savedBy || me.id,
+          savedAt: s.savedAt
+        };
+        try {
+          await api.update('helpRequests', currentRequest.id, { aiSummary: payload });
+          currentRequest.aiSummary = payload;
+          out.innerHTML = '';
+          renderSavedSummary();
+          ui.toast('Đã cập nhật tóm tắt trong phiên tư vấn.', 'success');
+        } catch (err) {
+          ui.toast('Không cập nhật được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+          renderSavedSummary();
+        }
+      }, function () {
+        out.innerHTML = '';
+        renderSavedSummary();
+      });
+    });
+
+    box.querySelector('[data-saved-reject]').addEventListener('click', function () {
+      ui.confirmModal({
+        title: 'Gỡ tóm tắt khỏi phiên tư vấn?',
+        message: 'Tóm tắt AI sẽ bị xóa khỏi yêu cầu này. Bạn vẫn có thể tạo lại bằng AI.',
+        okText: 'Gỡ tóm tắt',
+        danger: true
+      }).then(async function (ok) {
+        if (!ok) return;
+        try {
+          await api.update('helpRequests', currentRequest.id, { aiSummary: null });
+          currentRequest.aiSummary = null;
+          renderSavedSummary();
+          ui.toast('Đã gỡ tóm tắt khỏi phiên tư vấn.', 'success');
+        } catch (err) {
+          ui.toast('Không gỡ được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+        }
+      });
+    });
+  }
+
+  function renderAiError(err, retryFn) {
+    const acts = [];
+    if (err.code === 'network') acts.push('<button type="button" class="btn btn--primary btn--sm" data-ai-retry>' + ui.icon('refresh') + ' Thử lại</button>');
+    if (err.code === 'insufficient') acts.push('<button type="button" class="btn btn--secondary btn--sm" data-ai-retry>' + ui.icon('edit') + ' Dùng thủ công</button>');
+    out.innerHTML =
+      '<div class="ai-result" style="border-color:#ef9a9a; background:var(--danger-bg);">' +
+      '<div class="ai-result__title">' + ui.icon('alert') + ' AI không đưa ra được kết quả</div>' +
+      '<p class="muted" style="margin:0 0 10px;">' + ui.escapeHtml(err.message) + '</p>' +
+      '<div class="ai-result__actions">' + acts.join('') + '</div></div>';
+    const r = out.querySelector('[data-ai-retry]');
+    if (r) r.addEventListener('click', err.code === 'network' ? retryFn : manualToast);
+  }
+
+  function manualToast() {
+    ui.toast('Dùng thủ công: cuộn xuống card "Nhật ký liên quan" để đọc từng nhật ký và tự tổng hợp.', 'info');
+  }
+
+  loadRequest();
+});
+</script>
+</body>
+</html>

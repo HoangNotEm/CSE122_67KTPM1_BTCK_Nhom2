@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hàng đợi yêu cầu – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="expert" data-page="expert-request-queue.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Hàng đợi yêu cầu</h1>
+      <p>Tiếp nhận và ưu tiên xử lý các vấn đề từ nông hộ.</p>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh -->
+  <section class="grid grid--4" id="stats" aria-label="Thống kê hàng đợi">
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+  </section>
+
+  <!-- Tabs lọc nhanh + bảng hàng đợi -->
+  <div data-tabs-scope style="margin-top:16px;">
+    <div class="tabs" data-tabs role="tablist" aria-label="Lọc nhanh hàng đợi">
+      <button type="button" class="tabs__btn is-active" data-tab="all" aria-selected="true">Tất cả</button>
+      <button type="button" class="tabs__btn" data-tab="pending" aria-selected="false">Chờ tiếp nhận</button>
+      <button type="button" class="tabs__btn" data-tab="assigned" aria-selected="false">Đang xử lý</button>
+      <button type="button" class="tabs__btn" data-tab="done" aria-selected="false">Đã hoàn thành</button>
+    </div>
+
+    <div class="tab-pane is-active" data-pane="all">
+      <div class="filter-bar" role="search">
+        <span class="filter-bar__search">
+          <input class="input" type="search" id="f-q" placeholder="Tìm theo tiêu đề, mô tả hoặc tên nông dân..." aria-label="Tìm kiếm yêu cầu">
+        </span>
+        <select class="select" id="f-priority" aria-label="Lọc theo ưu tiên">
+          <option value="all">Tất cả ưu tiên</option>
+          <option value="high">Ưu tiên cao</option>
+          <option value="medium">Ưu tiên trung bình</option>
+          <option value="low">Ưu tiên thấp</option>
+        </select>
+        <select class="select" id="f-cat" aria-label="Lọc theo phân loại AI">
+          <option value="all">Tất cả phân loại AI</option>
+          <option value="sâu bệnh">Sâu bệnh</option>
+          <option value="dinh dưỡng">Dinh dưỡng</option>
+          <option value="tưới tiêu">Tưới tiêu</option>
+          <option value="đất">Đất</option>
+          <option value="thời tiết">Thời tiết</option>
+          <option value="khác">Khác</option>
+        </select>
+        <span class="filter-bar__count" id="result-count"></span>
+      </div>
+
+      <div class="card card--pad-0" id="queue-card">
+        <div id="queue-table" style="padding:6px 0;">
+          <div style="padding:14px 18px;">
+            <div class="skeleton skeleton--line w-80"></div>
+            <div class="skeleton skeleton--line w-60"></div>
+            <div class="skeleton skeleton--line w-40"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/modules/ai.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  /* ---------- Dữ liệu nền tra nhanh ---------- */
+  const userById = {};   api.read('users').forEach(function (u) { userById[u.id] = u; });
+  const seasonById = {}; api.read('seasons').forEach(function (s) { seasonById[s.id] = s; });
+  const fieldById = {};  api.read('fields').forEach(function (d) { fieldById[d.id] = d; });
+  const cropById = {};   api.read('crops').forEach(function (c) { cropById[c.id] = c; });
+
+  const PRIO = { high: 0, medium: 1, low: 2 };
+  const state = { tab: 'all', q: '', priority: 'all', cat: 'all' };
+  let requests = [];
+
+  /* ---------- Tải dữ liệu chính ---------- */
+  async function loadAll() {
+    document.getElementById('stats').innerHTML =
+      '<div class="skeleton skeleton--card"></div><div class="skeleton skeleton--card"></div>' +
+      '<div class="skeleton skeleton--card"></div><div class="skeleton skeleton--card"></div>';
+    document.getElementById('queue-table').innerHTML =
+      '<div style="padding:14px 18px;"><div class="skeleton skeleton--line w-80"></div>' +
+      '<div class="skeleton skeleton--line w-60"></div><div class="skeleton skeleton--line w-40"></div></div>';
+    try {
+      requests = await api.list('helpRequests');
+      renderStats();
+      renderTable();
+    } catch (e) {
+      document.getElementById('stats').innerHTML =
+        '<div class="card" style="grid-column:1/-1">' + ui.errorState(e.message) + '</div>';
+      document.getElementById('queue-table').innerHTML = ui.errorState(e.message);
+      bindRetry(loadAll);
+    }
+  }
+
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Thống kê ---------- */
+  function renderStats() {
+    const pending = requests.filter(function (r) { return r.status === 'pending'; });
+    const stats = [
+      { icon: 'clock',  cls: 'stat__icon--amber', value: pending.length, label: 'Chờ tiếp nhận' },
+      { icon: 'refresh', cls: 'stat__icon--blue', value: requests.filter(function (r) { return r.status === 'assigned' && r.assignedExpertId === me.id; }).length, label: 'Đang xử lý (của tôi)' },
+      { icon: 'check',  cls: '', value: requests.filter(function (r) { return r.status === 'resolved'; }).length, label: 'Đã tư vấn' },
+      { icon: 'alert',  cls: 'stat__icon--red', value: pending.filter(function (r) { return r.priority === 'high'; }).length, label: 'Ưu tiên cao đang chờ' }
+    ];
+    document.getElementById('stats').innerHTML = stats.map(function (s) {
+      return '<div class="stat"><span class="stat__icon ' + s.cls + '">' + ui.icon(s.icon) + '</span>' +
+        '<div><div class="stat__value">' + s.value + '</div><div class="stat__label">' + s.label + '</div></div></div>';
+    }).join('');
+  }
+
+  /* ---------- Bảng hàng đợi ---------- */
+  function filtered() {
+    const q = state.q.trim().toLowerCase();
+    return requests.filter(function (r) {
+      if (state.tab === 'pending' && r.status !== 'pending') return false;
+      if (state.tab === 'assigned' && r.status !== 'assigned') return false;
+      if (state.tab === 'done' && r.status !== 'resolved' && r.status !== 'rejected') return false;
+      if (state.priority !== 'all' && r.priority !== state.priority) return false;
+      if (state.cat !== 'all' && (!r.aiClassification || r.aiClassification.category !== state.cat)) return false;
+      if (q) {
+        const farmer = userById[r.farmerId] || {};
+        const hay = (r.title + ' ' + (r.description || '') + ' ' + (farmer.name || '')).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    }).sort(function (a, b) {
+      const ap = a.status === 'pending' ? 0 : 1, bp = b.status === 'pending' ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      const d = (PRIO[a.priority] != null ? PRIO[a.priority] : 9) - (PRIO[b.priority] != null ? PRIO[b.priority] : 9);
+      if (d) return d;
+      return a.createdAt < b.createdAt ? 1 : -1;
+    });
+  }
+
+  function renderTable() {
+    const box = document.getElementById('queue-table');
+    const list = filtered();
+    document.getElementById('result-count').textContent = list.length + ' kết quả';
+
+    if (!list.length) {
+      box.innerHTML = ui.emptyState({
+        icon: 'inbox', title: 'Hàng đợi trống',
+        desc: 'Tuyệt vời — không còn yêu cầu nào cần xử lý.'
+      });
+      return;
+    }
+
+    const rows = list.map(function (r) {
+      const farmer = userById[r.farmerId] || { name: '—', phone: '' };
+      const season = seasonById[r.seasonId] || null;
+      const field = fieldById[r.fieldId] || null;
+      const crop = season ? (cropById[season.cropId] || null) : null;
+      const seasonTxt = season
+        ? ui.escapeHtml(season.name) + (crop ? ' · ' + ui.escapeHtml(crop.name) : '')
+        : '—';
+      const fieldTxt = field ? ui.escapeHtml(field.name) : '—';
+      const aiChip = r.aiClassification
+        ? '<span class="tag">' + ui.escapeHtml(r.aiClassification.category) + ' · ' + Math.round(r.aiClassification.confidence * 100) + '%</span>'
+        : '<span class="muted">—</span>';
+
+      let actions = '';
+      if (r.status === 'pending') {
+        actions += '<button type="button" class="btn btn--primary btn--sm" data-accept="' + r.id + '">Nhận xử lý</button>';
+      }
+      actions += '<a class="btn btn--secondary btn--sm" href="expert-request-detail.html?id=' + r.id + '">' +
+        (r.status === 'pending' ? 'Xem' : 'Xem chi tiết') + '</a>';
+
+      return '<tr>' +
+        '<td data-label="Yêu cầu"><span class="table-card-label">Yêu cầu</span>' +
+          '<div class="cell-main">' + ui.escapeHtml(r.title) + '</div>' +
+          '<div class="cell-sub">' + ui.icon('calendar') + ' ' + ui.fmtDate(r.createdAt) + '</div></td>' +
+        '<td data-label="Nông dân"><span class="table-card-label">Nông dân</span>' +
+          '<div class="cell-main">' + ui.escapeHtml(farmer.name) + '</div>' +
+          '<div class="cell-sub">' + ui.escapeHtml(farmer.phone || '') + '</div></td>' +
+        '<td data-label="Mùa vụ / Cây trồng"><span class="table-card-label">Mùa vụ / Cây trồng</span>' +
+          '<div>' + seasonTxt + '</div><div class="cell-sub">' + fieldTxt + '</div></td>' +
+        '<td data-label="Phân loại AI"><span class="table-card-label">Phân loại AI</span>' + aiChip + '</td>' +
+        '<td data-label="Ưu tiên"><span class="table-card-label">Ưu tiên</span>' + ui.badge(r.priority) + '</td>' +
+        '<td data-label="Trạng thái"><span class="table-card-label">Trạng thái</span>' + ui.badge(r.status) + '</td>' +
+        '<td data-label="Hành động"><span class="table-card-label">Hành động</span>' +
+          '<div class="table__actions">' + actions + '</div></td>' +
+      '</tr>';
+    }).join('');
+
+    box.innerHTML =
+      '<div class="table-wrap"><table class="table">' +
+      '<thead><tr>' +
+        '<th>Yêu cầu</th><th>Nông dân</th><th>Mùa vụ / Cây trồng</th>' +
+        '<th>Phân loại AI</th><th>Ưu tiên</th><th>Trạng thái</th><th>Hành động</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  /* ---------- Nhận xử lý (delegation trên wrapper cố định) ---------- */
+  document.getElementById('queue-table').addEventListener('click', async function (e) {
+    const btn = e.target.closest('[data-accept]');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn__spinner"></span> Đang nhận...';
+    try {
+      await api.update('helpRequests', btn.getAttribute('data-accept'), { status: 'assigned', assignedExpertId: me.id });
+      ui.toast('Đã nhận xử lý. Mở "Xem chi tiết" để soạn phản hồi tư vấn.', 'success');
+      await loadAll();
+    } catch (err) {
+      ui.toast(err.message, 'error');
+      renderTable();
+    }
+  });
+
+  /* ---------- Tabs & bộ lọc ---------- */
+  ui.initTabs(document);
+  document.querySelectorAll('.tabs__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.tab = btn.getAttribute('data-tab');
+      renderTable();
+    });
+  });
+
+  document.getElementById('f-q').addEventListener('input', ui.debounce(function () {
+    state.q = this.value; renderTable();
+  }, 250));
+  document.getElementById('f-priority').addEventListener('change', function () {
+    state.priority = this.value; renderTable();
+  });
+  document.getElementById('f-cat').addEventListener('change', function () {
+    state.cat = this.value; renderTable();
+  });
+
+  loadAll();
+});
+</script>
+</body>
+</html>

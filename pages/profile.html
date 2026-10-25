@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ sơ cá nhân – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="*" data-page="profile.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Hồ sơ cá nhân</h1>
+      <p>Xem và cập nhật thông tin tài khoản của bạn.</p>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 2fr">
+    <!-- Cột trái: thẻ hồ sơ -->
+    <section class="card" aria-label="Thông tin hồ sơ" id="profile-card">
+      <div class="skeleton skeleton--card"></div>
+      <div class="skeleton skeleton--line w-80" style="margin-top:12px"></div>
+      <div class="skeleton skeleton--line w-60"></div>
+      <div class="skeleton skeleton--line w-40"></div>
+    </section>
+
+    <!-- Cột phải: chỉnh sửa -->
+    <div>
+      <section class="card" aria-labelledby="edit-title">
+        <div class="card__head"><h2 id="edit-title">Chỉnh sửa thông tin</h2></div>
+        <form id="profile-form" novalidate>
+          <div class="field">
+            <label class="field__label" for="p-name">Họ tên <span class="req">*</span></label>
+            <input class="input" type="text" id="p-name" name="name" data-rules="required" autocomplete="name">
+            <div class="field__error"></div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="field__label" for="p-phone">Số điện thoại</label>
+              <input class="input" type="tel" id="p-phone" name="phone" placeholder="0901 234 567" data-rules="phone" autocomplete="tel">
+              <div class="field__error"></div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="p-location">Khu vực</label>
+              <input class="input" type="text" id="p-location" name="location" placeholder="Xã, huyện, tỉnh">
+              <div class="field__error"></div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn--primary" id="btn-save-profile">Lưu thay đổi</button>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="pw-title">
+        <div class="card__head"><h2 id="pw-title">Đổi mật khẩu</h2></div>
+        <form id="password-form" novalidate>
+          <div class="field">
+            <label class="field__label" for="pw-current">Mật khẩu hiện tại <span class="req">*</span></label>
+            <input class="input" type="password" id="pw-current" name="current" data-rules="required" autocomplete="current-password">
+            <div class="field__error"></div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="field__label" for="pw-new">Mật khẩu mới <span class="req">*</span></label>
+              <input class="input" type="password" id="pw-new" name="newpw" placeholder="Tối thiểu 6 ký tự" data-rules="required" autocomplete="new-password">
+              <div class="field__error"></div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="pw-confirm">Xác nhận mật khẩu mới <span class="req">*</span></label>
+              <input class="input" type="password" id="pw-confirm" name="confirmpw" placeholder="Nhập lại mật khẩu mới" data-rules="required" autocomplete="new-password">
+              <div class="field__error"></div>
+            </div>
+          </div>
+          <div class="row">
+            <button type="submit" class="btn btn--primary" id="btn-save-pw">Đổi mật khẩu</button>
+            <span class="small muted">Mô phỏng — mật khẩu không được lưu lại.</span>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  const ROLE = { farmer: 'Nông dân', expert: 'Chuyên gia', coordinator: 'Điều phối HTX', admin: 'Quản trị viên' };
+  const ROLE_CLS = { farmer: 'success', expert: 'info', coordinator: 'warning', admin: 'danger' };
+  const PHONE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+
+  /* ---------- Thẻ hồ sơ (cột trái) ---------- */
+  function contactRow(iconHtml, text) {
+    return '<div class="row" style="gap:10px;flex-wrap:nowrap">' +
+      '<span style="width:30px;height:30px;border-radius:8px;background:var(--green-100);color:var(--green-800);display:grid;place-items:center;flex:none">' + iconHtml + '</span>' +
+      '<span style="min-width:0">' + ui.escapeHtml(text || '—') + '</span></div>';
+  }
+
+  function renderProfile(u) {
+    document.getElementById('profile-card').innerHTML =
+      '<div style="text-align:center">' +
+        '<div class="avatar" style="width:72px;height:72px;font-size:1.4rem;margin:0 auto 12px">' + ui.escapeHtml(ui.initials(u.name)) + '</div>' +
+        '<h2 style="margin-bottom:8px">' + ui.escapeHtml(u.name) + '</h2>' +
+        '<span class="badge badge--' + (ROLE_CLS[u.role] || 'neutral') + ' badge--lg">' + (ROLE[u.role] || ui.escapeHtml(u.role)) + '</span>' +
+      '</div>' +
+      '<hr class="divider">' +
+      '<div class="stack" style="font-size:.92rem">' +
+        contactRow(ui.icon('send', 'style="width:15px;height:15px"'), u.email) +
+        contactRow(PHONE_SVG, u.phone) +
+        contactRow(ui.icon('mapPin', 'style="width:15px;height:15px"'), u.location) +
+        contactRow(ui.icon('calendar', 'style="width:15px;height:15px"'), 'Tham gia: ' + ui.fmtDate(u.joinedAt)) +
+      '</div>';
+  }
+  renderProfile(me);
+
+  /* Đồng bộ tên mới lên chrome (topbar do main.js dựng) */
+  function updateChromeName(u) {
+    const avatar = document.querySelector('.avatar-btn .avatar');
+    if (avatar) avatar.textContent = ui.initials(u.name);
+    const short = document.querySelector('.avatar-btn__name');
+    if (short) short.textContent = u.name.split(' ').pop();
+    const label = document.querySelector('.dropdown__label');
+    if (label) label.textContent = u.name;
+  }
+
+  /* ---------- Form chỉnh sửa thông tin ---------- */
+  document.getElementById('p-name').value = me.name || '';
+  document.getElementById('p-phone').value = me.phone || '';
+  document.getElementById('p-location').value = me.location || '';
+
+  const profileForm = document.getElementById('profile-form');
+  ui.bindLiveValidation(profileForm);
+  profileForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!ui.validateForm(profileForm)) { ui.toast('Vui lòng kiểm tra lại thông tin.', 'error'); return; }
+    const btn = document.getElementById('btn-save-profile');
+    btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+    try {
+      const data = ui.serializeForm(profileForm);
+      const updated = await api.update('users', me.id, {
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        location: data.location.trim()
+      });
+      me.name = updated.name; me.phone = updated.phone; me.location = updated.location;
+      renderProfile(me);
+      updateChromeName(me);
+      ui.toast('Đã lưu thay đổi hồ sơ.', 'success');
+    } catch (err) {
+      ui.toast('Không lưu được: ' + ui.escapeHtml(err.message), 'error');
+    } finally {
+      btn.disabled = false; btn.innerHTML = 'Lưu thay đổi';
+    }
+  });
+
+  /* ---------- Form đổi mật khẩu (mock) ---------- */
+  function setFieldError(input, msg) {
+    const field = input.closest('.field');
+    field.classList.toggle('has-error', !!msg);
+    const errEl = field.querySelector('.field__error');
+    if (errEl) errEl.textContent = msg || '';
+    return !msg;
+  }
+
+  const pwForm = document.getElementById('password-form');
+  const pwNew = document.getElementById('pw-new');
+  const pwConfirm = document.getElementById('pw-confirm');
+  ui.bindLiveValidation(pwForm);
+  /* Validate lại độ khớp khi gõ tiếp */
+  pwConfirm.addEventListener('input', function () {
+    if (pwConfirm.closest('.field').classList.contains('has-error') && pwConfirm.value === pwNew.value) setFieldError(pwConfirm, '');
+  });
+  pwNew.addEventListener('input', function () {
+    if (pwNew.closest('.field').classList.contains('has-error') && pwNew.value.length >= 6) setFieldError(pwNew, '');
+  });
+
+  pwForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    let ok = ui.validateForm(pwForm);
+    ok = setFieldError(pwNew, pwNew.value.length >= 6 ? '' : 'Mật khẩu mới cần ít nhất 6 ký tự.') && ok;
+    ok = setFieldError(pwConfirm, pwConfirm.value === pwNew.value ? '' : 'Mật khẩu xác nhận không khớp.') && ok;
+    if (!ok) { ui.toast('Vui lòng kiểm tra lại mật khẩu.', 'error'); return; }
+    ui.toast('Đổi mật khẩu thành công (mô phỏng — không lưu lại)!', 'success');
+    pwForm.reset();
+  });
+});
+</script>
+</body>
+</html>
