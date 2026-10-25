@@ -49,6 +49,9 @@
       </div>
       <button type="button" class="btn btn--primary" id="ai3-run">Tóm tắt bằng AI</button>
       <div id="ai3-output" aria-live="polite"></div>
+      <!-- Tóm tắt đã lưu nằm trong chính yêu cầu (helpRequests.aiSummary),
+           nên vẫn hiển thị sau khi tải lại trang. -->
+      <div id="ai3-saved" aria-live="polite"></div>
     </section>
   </div>
 
@@ -123,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderAiCard();
     renderLogsCard();
     renderResponseCard();
+    renderSavedSummary();
   }
 
   /* ---------- Card 1: Thông tin yêu cầu ---------- */
@@ -366,7 +370,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderAiResult(res) {
     out.innerHTML =
       '<div class="ai-result">' +
-      '<div class="ai-result__title">' + ui.icon('check') + ' Tóm tắt diễn biến mùa vụ</div>' +
+      '<div class="ai-result__title">' + ui.icon('check') + ' Tóm tắt diễn biến mùa vụ' +
+        (res.edited ? ' <span class="tag">Đã chỉnh sửa</span>' : '') + '</div>' +
       '<p style="margin:0 0 10px;">' + ui.escapeHtml(res.summary) + '</p>' +
       (res.highlights && res.highlights.length
         ? '<strong class="small">Điểm nổi bật</strong><ul style="margin:4px 0 10px;">' +
@@ -374,26 +379,192 @@ document.addEventListener('DOMContentLoaded', function () {
         : '') +
       (res.risks && res.risks.length
         ? '<strong class="small">Rủi ro cần lưu ý</strong><ul class="stack" style="list-style:none; padding:0; margin:4px 0 10px;">' +
-          res.risks.map(function (r) {
-            return '<li class="row" style="gap:8px; align-items:flex-start; color:var(--warning);"><span style="flex:none; width:16px; height:16px;">' + ui.icon('alert') + '</span><span style="color:var(--text);">' + ui.escapeHtml(r) + '</span></li>';
+          res.risks.map(function (risk) {
+            return '<li class="row" style="gap:8px; align-items:flex-start; color:var(--warning);"><span style="flex:none; width:16px; height:16px;">' + ui.icon('alert') + '</span><span style="color:var(--text);">' + ui.escapeHtml(risk) + '</span></li>';
           }).join('') + '</ul>'
         : '') +
       '<div class="ai-result__why">' + ui.escapeHtml(res.why) + '</div>' +
       '<p class="small muted" style="margin:0;">' + ui.escapeHtml(res.disclaimer) + '</p>' +
       '<div class="ai-result__actions">' +
         '<button type="button" class="btn btn--primary btn--sm" data-ai-accept>' + ui.icon('check') + ' Chấp nhận &amp; lưu vào phiên tư vấn</button>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-ai-edit>' + ui.icon('edit') + ' Sửa</button>' +
         '<button type="button" class="btn btn--secondary btn--sm" data-ai-regen>' + ui.icon('refresh') + ' Tạo lại</button>' +
-        '<button type="button" class="btn btn--ghost btn--sm" data-ai-manual>' + ui.icon('edit') + ' Dùng thủ công</button>' +
+        '<button type="button" class="btn btn--danger-soft btn--sm" data-ai-reject>' + ui.icon('x') + ' Từ chối</button>' +
       '</div></div>';
 
-    out.querySelector('[data-ai-accept]').addEventListener('click', function () {
-      const saved = JSON.parse(localStorage.getItem('cropmate_ai_summaries') || '[]');
-      saved.push({ requestId: currentRequest.id, result: res, savedAt: ui.todayISO() });
-      localStorage.setItem('cropmate_ai_summaries', JSON.stringify(saved));
-      ui.toast('Đã lưu tóm tắt AI vào phiên tư vấn của yêu cầu.', 'success');
+    out.querySelector('[data-ai-accept]').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        await saveSummary({
+          summary: res.summary,
+          highlights: res.highlights || [],
+          risks: res.risks || [],
+          why: res.why,
+          disclaimer: res.disclaimer,
+          edited: !!res.edited
+        });
+      } catch (err) {
+        ui.toast('Không lưu được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+        btn.disabled = false;
+        btn.innerHTML = ui.icon('check') + ' Chấp nhận &amp; lưu vào phiên tư vấn';
+      }
+    });
+    out.querySelector('[data-ai-edit]').addEventListener('click', function () {
+      renderAiEdit(res, function (data) { renderAiResult(data); }, function () { renderAiResult(res); });
     });
     out.querySelector('[data-ai-regen]').addEventListener('click', function () { runBtn.click(); });
-    out.querySelector('[data-ai-manual]').addEventListener('click', manualToast);
+    out.querySelector('[data-ai-reject]').addEventListener('click', function () {
+      ui.confirmModal({
+        title: 'Từ chối kết quả AI?',
+        message: 'Kết quả này sẽ bị bỏ, không lưu vào phiên tư vấn. Bạn có thể tạo lại hoặc tự tổng hợp từ nhật ký.',
+        okText: 'Từ chối kết quả',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) return;
+        out.innerHTML = '';
+        ui.toast('Đã bỏ kết quả AI. Bạn có thể tạo lại hoặc tự tổng hợp từ nhật ký.', 'info');
+      });
+    });
+  }
+
+  /* Form sửa dùng cho cả kết quả mới và tóm tắt đã lưu */
+  function renderAiEdit(data, onSave, onCancel) {
+    out.innerHTML =
+      '<div class="ai-result">' +
+        '<div class="ai-result__title">' + ui.icon('edit') + ' Sửa tóm tắt trước khi lưu</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="ai3-edit-summary">Tóm tắt diễn biến</label>' +
+          '<textarea class="textarea" id="ai3-edit-summary" rows="5">' + ui.escapeHtml(data.summary) + '</textarea>' +
+          '<div class="field__hint">Tối thiểu 20 ký tự. Nội dung này sẽ được lưu vào phiên tư vấn của yêu cầu.</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="ai3-edit-risks">Rủi ro cần lưu ý (mỗi dòng một ý)</label>' +
+          '<textarea class="textarea" id="ai3-edit-risks" rows="3">' + ui.escapeHtml((data.risks || []).join('\n')) + '</textarea>' +
+        '</div>' +
+        '<div class="ai-result__actions">' +
+          '<button type="button" class="btn btn--primary btn--sm" data-edit-save>' + ui.icon('check') + ' Lưu thay đổi</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-edit-cancel>Hủy</button>' +
+        '</div>' +
+      '</div>';
+
+    const summaryEl = document.getElementById('ai3-edit-summary');
+    const risksEl = document.getElementById('ai3-edit-risks');
+    out.querySelector('[data-edit-save]').addEventListener('click', function () {
+      const summary = summaryEl.value.trim();
+      if (summary.length < 20) {
+        ui.toast('Tóm tắt cần ít nhất 20 ký tự.', 'warning');
+        summaryEl.focus();
+        return;
+      }
+      const risks = risksEl.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      onSave({
+        summary: summary,
+        highlights: data.highlights || [],
+        risks: risks,
+        why: data.why,
+        disclaimer: data.disclaimer,
+        edited: true
+      });
+    });
+    out.querySelector('[data-edit-cancel]').addEventListener('click', onCancel);
+  }
+
+  async function saveSummary(data) {
+    const payload = {
+      summary: data.summary,
+      highlights: data.highlights || [],
+      risks: data.risks || [],
+      why: data.why,
+      disclaimer: data.disclaimer,
+      edited: !!data.edited,
+      savedBy: me.id,
+      savedAt: ui.todayISO()
+    };
+    await api.update('helpRequests', currentRequest.id, { aiSummary: payload });
+    currentRequest.aiSummary = payload;
+    out.innerHTML = '';
+    renderSavedSummary();
+    ui.toast('Đã lưu tóm tắt AI vào phiên tư vấn của yêu cầu.', 'success');
+  }
+
+  /* Tóm tắt đã lưu: đọc từ currentRequest.aiSummary để hiển thị lại sau khi tải trang */
+  function renderSavedSummary() {
+    const box = document.getElementById('ai3-saved');
+    const s = currentRequest && currentRequest.aiSummary;
+    if (!s) { box.innerHTML = ''; return; }
+    box.innerHTML =
+      '<div class="ai-result" style="margin-top:12px; border-color:#a5d6a7; background:var(--success-bg, #e8f5e9);">' +
+        '<div class="ai-result__title">' + ui.icon('check') + ' Tóm tắt đã lưu trong phiên tư vấn' +
+          (s.edited ? ' <span class="tag">Đã chỉnh sửa</span>' : '') + '</div>' +
+        '<p style="margin:0 0 10px;">' + ui.escapeHtml(s.summary) + '</p>' +
+        (s.highlights && s.highlights.length
+          ? '<strong class="small">Điểm nổi bật</strong><ul style="margin:4px 0 10px;">' +
+            s.highlights.map(function (h) { return '<li>' + ui.escapeHtml(h) + '</li>'; }).join('') + '</ul>'
+          : '') +
+        (s.risks && s.risks.length
+          ? '<strong class="small">Rủi ro cần lưu ý</strong><ul style="margin:4px 0 10px;">' +
+            s.risks.map(function (risk) { return '<li>' + ui.escapeHtml(risk) + '</li>'; }).join('') + '</ul>'
+          : '') +
+        '<p class="small muted" style="margin:8px 0 0;">Lưu vào phiên tư vấn ngày ' + ui.fmtDate(s.savedAt) + '</p>' +
+        '<div class="ai-result__actions">' +
+          '<button type="button" class="btn btn--secondary btn--sm" data-saved-edit>' + ui.icon('edit') + ' Sửa tóm tắt đã lưu</button>' +
+          '<button type="button" class="btn btn--danger-soft btn--sm" data-saved-reject>' + ui.icon('x') + ' Từ chối tóm tắt</button>' +
+        '</div>' +
+      '</div>';
+
+    box.querySelector('[data-saved-edit]').addEventListener('click', function () {
+      const draft = {
+        summary: s.summary, highlights: s.highlights, risks: s.risks,
+        why: s.why, disclaimer: s.disclaimer
+      };
+      box.innerHTML = '';
+      renderAiEdit(draft, async function (data) {
+        const payload = {
+          summary: data.summary,
+          highlights: data.highlights || [],
+          risks: data.risks || [],
+          why: data.why,
+          disclaimer: data.disclaimer,
+          edited: true,
+          savedBy: s.savedBy || me.id,
+          savedAt: s.savedAt
+        };
+        try {
+          await api.update('helpRequests', currentRequest.id, { aiSummary: payload });
+          currentRequest.aiSummary = payload;
+          out.innerHTML = '';
+          renderSavedSummary();
+          ui.toast('Đã cập nhật tóm tắt trong phiên tư vấn.', 'success');
+        } catch (err) {
+          ui.toast('Không cập nhật được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+          renderSavedSummary();
+        }
+      }, function () {
+        out.innerHTML = '';
+        renderSavedSummary();
+      });
+    });
+
+    box.querySelector('[data-saved-reject]').addEventListener('click', function () {
+      ui.confirmModal({
+        title: 'Gỡ tóm tắt khỏi phiên tư vấn?',
+        message: 'Tóm tắt AI sẽ bị xóa khỏi yêu cầu này. Bạn vẫn có thể tạo lại bằng AI.',
+        okText: 'Gỡ tóm tắt',
+        danger: true
+      }).then(async function (ok) {
+        if (!ok) return;
+        try {
+          await api.update('helpRequests', currentRequest.id, { aiSummary: null });
+          currentRequest.aiSummary = null;
+          renderSavedSummary();
+          ui.toast('Đã gỡ tóm tắt khỏi phiên tư vấn.', 'success');
+        } catch (err) {
+          ui.toast('Không gỡ được tóm tắt: ' + ui.escapeHtml(err.message), 'error');
+        }
+      });
+    });
   }
 
   function renderAiError(err, retryFn) {
