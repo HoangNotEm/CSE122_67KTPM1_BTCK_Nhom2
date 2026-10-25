@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Sơ đồ trang CropMate AI – 21 màn hình</title>
+  <desc id="desc">Sơ đồ trang chia theo 6 nhóm: công khai, dùng chung, nông dân, chuyên gia, điều phối HTX và quản trị viên.</desc>
+  <defs>
+    <radialGradient id="bg" cx="82%" cy="4%" r="80%">
+      <stop offset="0" stop-color="#2e7d32" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#0d2f16" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7fb985"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="#000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="900" fill="#0d2f16"/>
+  <rect width="1440" height="900" fill="url(#bg)"/>
+
+  <text x="56" y="58" fill="#a5d6a7" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">CROP MATE AI · CSE122 · NHÓM 2 – 67KTPM1</text>
+  <text x="56" y="104" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="800">Sơ đồ trang – 21 màn hình</text>
+  <text x="56" y="134" fill="#cfe6d0" font-family="Segoe UI, Arial, sans-serif" font-size="15">4 vai trò · 12 màn hình nền tảng + 9 màn hình dùng chung · 3 tính năng AI</text>
+
+  <!-- Root -->
+  <rect x="548" y="172" width="344" height="56" rx="14" fill="#ffd166" filter="url(#shadow)"/>
+  <text x="720" y="198" text-anchor="middle" fill="#3e2a00" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="800">CropMate AI</text>
+  <text x="720" y="216" text-anchor="middle" fill="#6b4d00" font-family="Segoe UI, Arial, sans-serif" font-size="11">index.html · landing công khai</text>
+
+  <!-- Connectors root to column headers -->
+  <path d="M720 228 L720 246" stroke="#7fb985" stroke-width="2" fill="none"/>
+  <path d="M152 246 L1288 246" stroke="#7fb985" stroke-width="2" fill="none"/>
+  <g stroke="#7fb985" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M152 246 L152 272"/>
+    <path d="M379 246 L379 272"/>
+    <path d="M606 246 L606 272"/>
+    <path d="M833 246 L833 272"/>
+    <path d="M1060 246 L1060 272"/>
+    <path d="M1288 246 L1288 272"/>
+  </g>
+
+  <!-- Column 1: Public (1-4) -->
+  <rect x="46" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="152" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Công khai (4)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="46" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="58" y="358">1. Landing</text>
+    <rect x="46" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="58" y="412">2. Login</text>
+    <rect x="46" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="58" y="466">3. Register</text>
+    <rect x="46" y="494" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="58" y="520">4. Forgot password</text>
+  </g>
+
+  <!-- Column 2: Shared (5-9) -->
+  <rect x="273" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="379" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Dùng chung (5)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="273" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="285" y="358">5. Profile</text>
+    <rect x="273" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="285" y="412">6. Settings</text>
+    <rect x="273" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="285" y="466">7. Notifications</text>
+    <rect x="273" y="494" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="285" y="520">8. 403</text>
+    <rect x="273" y="548" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="285" y="574">9. 404</text>
+  </g>
+
+  <!-- Column 3: Farmer (10-12) -->
+  <rect x="500" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="606" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Nông dân (3)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="500" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="512" y="358">10. Season Dashboard</text>
+    <rect x="500" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="512" y="412">11. Field Log</text>
+    <rect x="500" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="512" y="466">12. Help Request</text>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#8b5e00">
+    <rect x="500" y="494" width="212" height="42" rx="8" fill="#fff8e1" stroke="#ffd166"/>
+    <text x="512" y="512" font-weight="700">AI-2 Checklist Generator</text>
+    <text x="512" y="527">Dashboard · lưu checklist</text>
+    <rect x="500" y="548" width="212" height="42" rx="8" fill="#fff8e1" stroke="#ffd166"/>
+    <text x="512" y="566" font-weight="700">AI-1 Issue Classifier</text>
+    <text x="512" y="581">Help Request · phân loại</text>
+  </g>
+
+  <!-- Column 4: Expert (13-15) -->
+  <rect x="727" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="833" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Chuyên gia (3)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="727" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="739" y="358">13. Request Queue</text>
+    <rect x="727" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="739" y="412">14. Request Detail</text>
+    <rect x="727" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="739" y="466">15. Resource Library</text>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#8b5e00">
+    <rect x="727" y="494" width="212" height="42" rx="8" fill="#fff8e1" stroke="#ffd166"/>
+    <text x="739" y="512" font-weight="700">AI-3 Farm Log Summarizer</text>
+    <text x="739" y="527">Request Detail · tóm tắt</text>
+  </g>
+
+  <!-- Column 5: Coordinator (16-18) -->
+  <rect x="954" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="1060" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Điều phối HTX (3)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="954" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="966" y="358">16. Farm Overview</text>
+    <rect x="954" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="966" y="412">17. Calendar</text>
+    <rect x="954" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="966" y="466">18. Season Summary</text>
+  </g>
+
+  <!-- Column 6: Admin (19-21) -->
+  <rect x="1181" y="276" width="212" height="42" rx="10" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="1287" y="302" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700">Quản trị viên (3)</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#22332a">
+    <rect x="1181" y="332" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="1193" y="358">19. Admin Dashboard</text>
+    <rect x="1181" y="386" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="1193" y="412">20. Crop Management</text>
+    <rect x="1181" y="440" width="212" height="42" rx="8" fill="#f7fbf7"/><text x="1193" y="466">21. User Management</text>
+  </g>
+
+  <!-- Notes -->
+  <rect x="46" y="650" width="654" height="150" rx="14" fill="#f7fbf7"/>
+  <text x="70" y="680" fill="#1b5e20" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800">Luồng nghiệp vụ chính</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#52655a">
+    <text x="70" y="707">Nông dân: Dashboard (AI-2) → Ghi nhật ký → Gửi yêu cầu (AI-1) → Theo dõi phản hồi</text>
+    <text x="70" y="731">Chuyên gia: Hàng đợi → Chi tiết (AI-3) → Phản hồi + gắn tài nguyên</text>
+    <text x="70" y="755">Điều phối: Tổng quan nông hộ → Lịch HTX → Tổng kết mùa vụ</text>
+    <text x="70" y="779">Quản trị: Dashboard → Danh mục cây trồng → Tài khoản &amp; phân quyền</text>
+  </g>
+
+  <rect x="726" y="650" width="668" height="150" rx="14" fill="#e8f5e9" stroke="#c8e6c9"/>
+  <text x="750" y="680" fill="#1b5e20" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800">Quy ước trạng thái &amp; dữ liệu</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12.5" fill="#3f5a46">
+    <text x="750" y="707">· Mọi màn hình dùng mock API LocalStorage, có skeleton khi tải, empty state và lỗi + thử lại.</text>
+    <text x="750" y="731">· AI luôn có 6 bước: nhập → xử lý → kết quả → giải thích → chấp nhận/sửa/từ chối/tạo lại → lưu.</text>
+    <text x="750" y="755">· Phân quyền phía client: sai vai trò → 403 kèm nút đổi vai trò; URL sai → 404.</text>
+    <text x="750" y="779">· Chi tiết CRUD/trạng thái/Task ID/nhánh/OBS: docs/screen-inventory.md.</text>
+  </g>
+
+  <text x="56" y="856" fill="#7fa886" font-family="Segoe UI, Arial, sans-serif" font-size="11">Page 00 · Sơ đồ trang · CropMate AI – UI/UX Mockup · 25/10/2026</text>
+  <text x="1384" y="856" text-anchor="end" fill="#7fa886" font-family="Segoe UI, Arial, sans-serif" font-size="11">Tổng 21 màn hình · 6 nhóm</text>
+</svg>

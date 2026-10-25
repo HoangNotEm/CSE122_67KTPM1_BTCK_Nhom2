@@ -14,3 +14,7 @@ LINK FIGMA CỦA NHÓM (mở được bằng link, không cần đăng nhập):
 
 Bộ ảnh gốc: design/figma/screens/ — 30 ảnh PNG (21 màn hình + bìa & design system + 5 trạng thái AI + 2 mobile).
 Cách xem: mở link → panel Pages bên trái → chọn page tương ứng.
+
+SƠ ĐỒ BỔ TRỢ (SVG, mở bằng trình duyệt hoặc kéo thả vào Figma Page 00):
+- design/figma/sitemap.svg    — sitemap 21 màn hình theo 4 vai trò, số thứ tự khớp README.
+- design/figma/user-flow.svg  — user flow 7 bước + nhánh AI thất bại + quy ước trạng thái.

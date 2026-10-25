@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">User flow CropMate AI – từ đăng nhập đến tư vấn và tổng kết mùa vụ</title>
+  <desc id="desc">Luồng 7 giai đoạn: khách đăng nhập, nông dân dùng AI-2 tạo checklist, ghi nhật ký, gửi yêu cầu với AI-1, chuyên gia xử lý với AI-3, phản hồi và hệ thống lưu thông báo.</desc>
+  <defs>
+    <radialGradient id="bg2" cx="85%" cy="0%" r="80%">
+      <stop offset="0" stop-color="#2e7d32" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#0d2f16" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8fc795"/>
+    </marker>
+    <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity=".25"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="900" fill="#0d2f16"/>
+  <rect width="1440" height="900" fill="url(#bg2)"/>
+
+  <text x="56" y="58" fill="#a5d6a7" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">CROP MATE AI · CSE122 · NHÓM 2 – 67KTPM1</text>
+  <text x="56" y="104" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="800">User flow – 7 giai đoạn</text>
+  <text x="56" y="134" fill="#cfe6d0" font-family="Segoe UI, Arial, sans-serif" font-size="15">Từ đăng nhập → mùa vụ → yêu cầu hỗ trợ → chuyên gia phản hồi → thông báo &amp; tổng kết</text>
+
+  <!-- Legend -->
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#cfe6d0">
+    <circle cx="1090" cy="96" r="5" fill="#66bb6a"/><text x="1102" y="100">Khách / Nông dân</text>
+    <circle cx="1180" cy="96" r="5" fill="#ffd166"/><text x="1192" y="100">AI</text>
+    <circle cx="1240" cy="96" r="5" fill="#64b5f6"/><text x="1252" y="100">Chuyên gia</text>
+    <circle cx="1332" cy="96" r="5" fill="#e57373"/><text x="1344" y="100">Hệ thống</text>
+  </g>
+
+  <!-- Stage headers -->
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="700" fill="#a5d6a7">
+    <text x="60" y="180">GIAI ĐOẠN 1</text>
+    <text x="250" y="180">GIAI ĐOẠN 2</text>
+    <text x="440" y="180">GIAI ĐOẠN 3</text>
+    <text x="630" y="180">GIAI ĐOẠN 4</text>
+    <text x="820" y="180">GIAI ĐOẠN 5</text>
+    <text x="1010" y="180">GIAI ĐOẠN 6</text>
+    <text x="1200" y="180">GIAI ĐOẠN 7</text>
+  </g>
+
+  <!-- Column 1 -->
+  <rect x="60" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="150" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Khách</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="60" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="72" y="272">Landing</text><text x="72" y="289" font-size="10.5" fill="#6b7f70">Giới thiệu sản phẩm</text>
+    <rect x="60" y="316" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="72" y="338">Đăng nhập / Đăng ký</text><text x="72" y="355" font-size="10.5" fill="#6b7f70">Validation đầy đủ</text>
+    <rect x="60" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="72" y="404">Chọn vai trò demo</text><text x="72" y="421" font-size="10.5" fill="#6b7f70">4 vai trò</text>
+  </g>
+
+  <!-- Column 2 -->
+  <rect x="250" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="340" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Nông dân · AI-2</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="250" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="262" y="272">Dashboard mùa vụ</text><text x="262" y="289" font-size="10.5" fill="#6b7f70">Tiến độ + giai đoạn</text>
+    <rect x="250" y="316" width="180" height="52" rx="8" fill="#fff8e1" stroke="#ffd166"/><text x="262" y="338" font-weight="700" fill="#8b5e00">AI-2 tạo checklist</text><text x="262" y="355" font-size="10.5" fill="#8b5e00">Đang xử lý → kết quả</text>
+    <rect x="250" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="262" y="404">Chấp nhận / sửa</text><text x="262" y="421" font-size="10.5" fill="#6b7f70">Lưu checklist</text>
+  </g>
+
+  <!-- Column 3 -->
+  <rect x="440" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="530" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Nông dân</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="440" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="452" y="272">Ghi nhật ký</text><text x="452" y="289" font-size="10.5" fill="#6b7f70">Theo mùa vụ</text>
+    <rect x="440" y="316" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="452" y="338">Gắn ảnh hiện trường</text><text x="452" y="355" font-size="10.5" fill="#6b7f70">Thư viện ảnh</text>
+    <rect x="440" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="452" y="404">Lọc / tìm kiếm</text><text x="452" y="421" font-size="10.5" fill="#6b7f70">Theo mùa vụ, loại</text>
+  </g>
+
+  <!-- Column 4 -->
+  <rect x="630" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="720" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Nông dân · AI-1</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="630" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="642" y="272">Tạo yêu cầu hỗ trợ</text><text x="642" y="289" font-size="10.5" fill="#6b7f70">Mô tả triệu chứng</text>
+    <rect x="630" y="316" width="180" height="52" rx="8" fill="#fff8e1" stroke="#ffd166"/><text x="642" y="338" font-weight="700" fill="#8b5e00">AI-1 phân loại</text><text x="642" y="355" font-size="10.5" fill="#8b5e00">Nhóm + độ tin cậy</text>
+    <rect x="630" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="642" y="404">Gửi chuyên gia</text><text x="642" y="421" font-size="10.5" fill="#6b7f70">Trạng thái pending</text>
+  </g>
+
+  <!-- Column 5 -->
+  <rect x="820" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="910" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Chuyên gia · AI-3</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="820" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="832" y="272">Hàng đợi yêu cầu</text><text x="832" y="289" font-size="10.5" fill="#6b7f70">Lọc ưu tiên</text>
+    <rect x="820" y="316" width="180" height="52" rx="8" fill="#e3f2fd" stroke="#64b5f6"/><text x="832" y="338" font-weight="700" fill="#0d47a1">AI-3 tóm tắt</text><text x="832" y="355" font-size="10.5" fill="#0d47a1">Nhật ký + rủi ro</text>
+    <rect x="820" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="832" y="404">Sửa / lưu tóm tắt</text><text x="832" y="421" font-size="10.5" fill="#6b7f70">Vào phiên tư vấn</text>
+  </g>
+
+  <!-- Column 6 -->
+  <rect x="1010" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="1100" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Chuyên gia</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="1010" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1022" y="272">Soạn phản hồi</text><text x="1022" y="289" font-size="10.5" fill="#6b7f70">Tối thiểu 20 ký tự</text>
+    <rect x="1010" y="316" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1022" y="338">Gắn tài nguyên</text><text x="1022" y="355" font-size="10.5" fill="#6b7f70">Từ thư viện</text>
+    <rect x="1010" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1022" y="404">Đóng yêu cầu</text><text x="1022" y="421" font-size="10.5" fill="#6b7f70">resolved / rejected</text>
+  </g>
+
+  <!-- Column 7 -->
+  <rect x="1200" y="196" width="180" height="38" rx="8" fill="#1b5e20" stroke="#66bb6a"/>
+  <text x="1290" y="220" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="700">Hệ thống</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#22332a">
+    <rect x="1200" y="250" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1212" y="272">Lưu LocalStorage</text><text x="1212" y="289" font-size="10.5" fill="#6b7f70">Mock API + độ trễ</text>
+    <rect x="1200" y="316" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1212" y="338">Thông báo</text><text x="1212" y="355" font-size="10.5" fill="#6b7f70">Đã đọc / chưa đọc</text>
+    <rect x="1200" y="382" width="180" height="52" rx="8" fill="#f7fbf7"/><text x="1212" y="404">Tổng kết mùa vụ</text><text x="1212" y="421" font-size="10.5" fill="#6b7f70">CSV · 403/404</text>
+  </g>
+
+  <!-- Arrows between stages -->
+  <g stroke="#8fc795" stroke-width="2" fill="none" marker-end="url(#arrow2)">
+    <path d="M240 276 L250 276"/>
+    <path d="M430 276 L440 276"/>
+    <path d="M620 276 L630 276"/>
+    <path d="M810 276 L820 276"/>
+    <path d="M1000 276 L1010 276"/>
+    <path d="M1190 276 L1200 276"/>
+  </g>
+  <!-- Handoff yêu cầu: nông dân -> chuyên gia -->
+  <path d="M720 434 C720 470 910 456 910 476" stroke="#ffd166" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#arrow2)"/>
+  <text x="735" y="462" fill="#ffd166" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">chuyển yêu cầu</text>
+
+  <!-- Bottom: AI cards -->
+  <text x="60" y="520" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800">3 trải nghiệm AI – cùng một chu trình 6 bước</text>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <rect x="60" y="538" width="410" height="112" rx="12" fill="#f7fbf7"/>
+    <text x="78" y="564" fill="#8b5e00" font-size="13" font-weight="800">AI-1 · Field Issue Classifier</text>
+    <text x="78" y="586" fill="#52655a" font-size="11.5">Nhập mô tả triệu chứng → phân loại nhóm vấn đề</text>
+    <text x="78" y="605" fill="#52655a" font-size="11.5">→ độ tin cậy + lý do → chấp nhận / sửa / từ chối</text>
+    <text x="78" y="624" fill="#52655a" font-size="11.5">→ lưu vào yêu cầu hỗ trợ (helpRequests)</text>
+
+    <rect x="490" y="538" width="410" height="112" rx="12" fill="#f7fbf7"/>
+    <text x="508" y="564" fill="#8b5e00" font-size="13" font-weight="800">AI-2 · Season Checklist Generator</text>
+    <text x="508" y="586" fill="#52655a" font-size="11.5">Chọn cây trồng + giai đoạn → checklist công việc</text>
+    <text x="508" y="605" fill="#52655a" font-size="11.5">→ lý do từng việc → sửa / bỏ việc / tạo lại</text>
+    <text x="508" y="624" fill="#52655a" font-size="11.5">→ lưu vào “Checklist đã lưu” của nông dân</text>
+
+    <rect x="920" y="538" width="410" height="112" rx="12" fill="#f7fbf7"/>
+    <text x="938" y="564" fill="#0d47a1" font-size="13" font-weight="800">AI-3 · Farm Log Summarizer</text>
+    <text x="938" y="586" fill="#52655a" font-size="11.5">Chọn yêu cầu có nhật ký → tóm tắt diễn biến</text>
+    <text x="938" y="605" fill="#52655a" font-size="11.5">→ điểm chính + rủi ro + lý do → sửa / lưu</text>
+    <text x="938" y="624" fill="#52655a" font-size="11.5">→ lưu vào phiên tư vấn (helpRequests.aiSummary)</text>
+  </g>
+
+  <!-- Bottom notes -->
+  <rect x="60" y="676" width="640" height="150" rx="12" fill="#e8f5e9" stroke="#c8e6c9"/>
+  <text x="80" y="704" fill="#1b5e20" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="800">Trạng thái bắt buộc</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="11.5" fill="#3f5a46">
+    <text x="80" y="729">· Đang tải (skeleton) · Rỗng · Lỗi + Thử lại · Thành công (toast)</text>
+    <text x="80" y="751">· Yêu cầu: pending → assigned → resolved / rejected / cancelled</text>
+    <text x="80" y="773">· AI thất bại: thiếu dữ liệu · không chắc chắn · lỗi mạng</text>
+    <text x="80" y="795">· Hành động: Thử lại · Dùng thủ công · Báo cáo</text>
+  </g>
+
+  <rect x="720" y="676" width="610" height="150" rx="12" fill="#fff8e1" stroke="#ffd166"/>
+  <text x="740" y="704" fill="#8b5e00" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="800">Điểm kiểm soát của người dùng</text>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="11.5" fill="#6b4d00">
+    <text x="740" y="729">Mọi kết quả AI đều có: Chấp nhận · Sửa · Từ chối · Tạo lại.</text>
+    <text x="740" y="751">Không tự động ghi đè dữ liệu; người dùng bấm lưu mới ghi.</text>
+    <text x="740" y="773">Kết quả đã lưu hiển thị lại sau khi tải trang và có thể sửa/xóa.</text>
+    <text x="740" y="795">Chi tiết màn hình: docs/screen-inventory.md · Kịch bản quay: docs/obs/.</text>
+  </g>
+
+  <text x="60" y="856" fill="#7fa886" font-family="Segoe UI, Arial, sans-serif" font-size="11">Page 00 · User flow · CropMate AI – UI/UX Mockup · 25/10/2026</text>
+  <text x="1380" y="856" text-anchor="end" fill="#7fa886" font-family="Segoe UI, Arial, sans-serif" font-size="11">7 giai đoạn · 4 vai trò · 3 tính năng AI</text>
+</svg>

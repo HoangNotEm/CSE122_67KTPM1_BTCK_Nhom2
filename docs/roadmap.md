@@ -1,53 +1,61 @@
-# Lộ trình thực hiện – CropMate AI (1 tuần: 20–26/10/2026)
+# Lộ trình thực hiện – CropMate AI (20–26/10/2026)
 
-> Dùng làm khung Trello/Jira/Notion. Mỗi task gồm: mã – tên – người thực hiện – hạn – nhánh – link PR – link OBS.
+> **Nguồn Task ID duy nhất:** [`docs/trello-board.md`](trello-board.md). Roadmap này chỉ xếp thứ tự thời gian; không tự đánh số task mới.
+> Mỗi thẻ Trello gồm: mã – tên – người thực hiện – hạn – nhánh – link PR – link OBS.
 
-## Bảng Trello tối thiểu
-`TỒN ĐỌG → CẦN LÀM → ĐANG LÀM → CHỜ DUYỆT (PR) → HOÀN THÀNH`
+## Bảng Trello
+`TỒN ĐỌNG → CẦN LÀM → ĐANG LÀM → CHỜ DUYỆT (PR) → HOÀN THÀNH`
 
 ## Ngày 1–2 (20–21/10) – Đề + thiết kế
-| Mã | Task | Người | Nhánh gợi ý |
-|---|---|---|---|
-| TASK-01 | Khung dây + mockup Figma/Canva trang đầu tiên (farmer dashboard) | Cả nhóm | `docs/wireframes` |
-| TASK-02 | Hoàn thiện bảng kiểm kê màn hình + luồng người dùng, nộp giảng viên duyệt | Cả nhóm | `docs/screen-list` |
-| TASK-03 | Mockup desktop + bản responsive chính + trạng thái loading/empty/error + mockup tương tác AI | SV1 (lead), cả nhóm review | `design/figma` |
+
+| Ngày | Việc | Người | Thẻ Trello | Nhánh |
+|---|---|---|---|---|
+| 20/10 | Duyệt đề cương, vấn đề, vai trò, user flow với giảng viên | Cả nhóm | TASK-00, TASK-29 | – |
+| 20/10 | Khởi tạo repo, cấu trúc thư mục, `.gitignore`, quyền 3 thành viên | Cả nhóm | TASK-01 | `main`, `dev` |
+| 21/10 | Sơ đồ trang + user flow + bảng kiểm kê 12 cột | Cả nhóm | TASK-02, TASK-30 | `docs/screen-inventory` |
+| 21/10 | Wireframe, mockup desktop 21 màn, responsive, trạng thái lỗi/rỗng/đang tải, nguyên mẫu AI | SV1 lead, SV2/SV3 phần màn mình | TASK-03, TASK-04 | `design/figma` |
 
 ## Ngày 2–3 (21–22/10) – Khung dự án
-| Mã | Task | Người | Nhánh gợi ý |
-|---|---|---|---|
-| TASK-04 | Khởi tạo repo GitHub, cấu trúc thư mục, README, design system CSS (token, header/sidebar, component) | SV1 | `feature/design-system` |
-| TASK-05 | Mock data module + API LocalStorage (giả lập độ trễ) | SV2 | `feature/mock-data-api` |
-| TASK-06 | Trang public: index, login, register, forgot-password, 403, 404 | SV3 | `feature/public-pages` |
 
-## Ngày 3–5 (22–24/10) – Triển khai theo vai trò (mỗi SV tự làm trọn vẹn HTML→CSS→JS→data của phần mình)
-| Mã | Task | Người | Nhánh gợi ý |
+| Ngày | Việc | Người | Thẻ Trello | Nhánh |
+|---|---|---|---|---|
+| 21/10 | Design system CSS + audit a11y | SV1 | TASK-09 | `feature/farmer-screens` |
+| 22/10 | Mock data + API LocalStorage (độ trễ, `forceFailNext`, reset) | SV2 | TASK-13 | `feature/expert-screens` |
+| 22/10 | Trang auth: index (SV3), login/register (SV1), forgot-password (SV2) | SV1, SV2, SV3 | TASK-08 | ba nhánh feature |
+
+## Ngày 3–5 (22–24/10) – Triển khai theo vai trò
+
+Mỗi SV tự làm trọn vẹn HTML → CSS → JS → dữ liệu → responsive cho phần mình.
+
+| Việc | Người | Thẻ Trello | Nhánh |
 |---|---|---|---|
-| TASK-07 | Nông dân: season dashboard (AI-2), field log, help request (AI-1) | SV1 | `feature/farmer-*` |
-| TASK-08 | Chuyên gia: request queue, request detail (AI-3), resource library | SV2 | `feature/expert-*` |
-| TASK-09 | Điều phối HTX: farm overview, calendar, season summary | SV3 | `feature/coordinator-*` |
-| TASK-10 | Quản trị: admin dashboard, crop management, user management | SV3 | `feature/admin-*` |
-| TASK-11 | Trang tài khoản: profile, settings, notifications | SV2 | `feature/account-pages` |
-| TASK-12 | AI engine dùng chung (`js/modules/ai.js`): đủ chu trình + trạng thái thất bại | SV2 | `feature/ai-engine` |
-| TASK-13 | Responsive toàn hệ thống + kiểm thử đa trình duyệt/di động | SV3 | `feature/responsive-qa` |
+| Nông dân: season dashboard (AI-2), field log, help request (AI-1) | SV1 | TASK-05, TASK-06, TASK-07 | `feature/farmer-screens` |
+| Chuyên gia: request queue, request detail (AI-3), resource library | SV2 | TASK-10, TASK-11, TASK-12 | `feature/expert-screens` |
+| Engine AI dùng chung (`js/modules/ai.js`) + trạng thái thất bại | SV2 | TASK-14 | `feature/expert-screens` |
+| Điều phối HTX: farm overview, calendar, season summary | SV3 | TASK-16, TASK-17, TASK-18 | `feature/coordinator-admin-screens` |
+| Quản trị: dashboard, crop management, user management | SV3 | TASK-19, TASK-20, TASK-21 | `feature/coordinator-admin-screens` |
+| Trang cá nhân: profile/settings (SV2), notifications (SV1), 403/404 (SV3) | SV1, SV2, SV3 | TASK-22 | ba nhánh feature |
+| Review chéo PR theo checklist màn hình | SV2 review SV1/SV3, SV3 review SV2, SV1 review SV3 | TASK-15 | – |
 
 ## Ngày 5–6 (25–26/10) – Tích hợp & kiểm thử
-| Mã | Task | Người | Nhánh gợi ý |
-|---|---|---|---|
-| TASK-14 | Merge `dev`, test tích hợp toàn luồng (nông dân tạo yêu cầu → chuyên gia phản hồi) | SV3 + cả nhóm | `dev` |
-| TASK-15 | Kiểm tra lại bảng kiểm kê: đủ trạng thái, đúng tên tệp, a11y | SV1 | `fix/screen-audit` |
-| TASK-16 | Điền `docs/ai-usage-report.md` | SV2 | `docs/ai-report` |
 
-## Ngày 6 (26/10) – Minh chứng
-| Mã | Task | Người |
-|---|---|---|
-| TASK-17 | Quay OBS **mỗi màn hình 1 video** (có mặt SV, hiện Figma + code + chỉnh sửa trực tiếp + chạy thử + commit, nói rõ TASK/nhánh/commit) | Mỗi SV cho phần mình |
-| TASK-18 | Đặt tên video đúng chuẩn `SV1-01-screen-name.mp4`, dán link vào Trello + README | Mỗi SV |
+| Ngày | Việc | Người | Thẻ Trello | Nhánh |
+|---|---|---|---|---|
+| 25/10 | Merge `dev`, test tích hợp toàn luồng (nông dân tạo yêu cầu → chuyên gia phản hồi) | SV3 + cả nhóm | TASK-23 | `dev` |
+| 25/10 | Kiểm tra bảng kiểm kê: đủ trạng thái, đúng tên tệp, a11y | SV1 | TASK-15 | `dev` |
+| 25/10 | Merge `dev` → `main`, tag `v1.0`, bật GitHub Pages, kiểm tra live demo | SV3 | TASK-23 | `main` |
+| 26/10 | Hoàn thiện `docs/ai-usage-report.md`, điền link OBS vào README | Cả nhóm (SV3 tổng hợp) | TASK-28 | `main` |
 
-## Ngày 6 (26/10) – Dự phòng & nộp bài
-| Mã | Task | Người |
+## Ngày 6 (26/10) – Minh chứng & nộp bài
+
+| Việc | Người | Thẻ Trello |
 |---|---|---|
-| TASK-19 | Luyện "chỉnh sửa ngẫu nhiên 5–10 phút" (thêm filter, đổi table→card, thêm field+validation, xử lý API rỗng, đổi layout responsive, thêm trạng thái) | Cả nhóm |
-| TASK-20 | Merge `main`, hoàn thiện README, kiểm chuỗi: Ngữ cảnh→…→OBS→Sản phẩm | Cả nhóm |
+| Quay OBS **mỗi màn hình 1 video**: mặt + giọng SV, mockup Figma, mở đúng HTML/CSS/JS, giải thích, **sửa code trực tiếp**, chạy thử + responsive, commit/push, nêu Task ID/nhánh/commit | SV1 (6 video) | TASK-24 |
+|  | SV2 (6 video) + SV3 (9 video) | TASK-25 |
+| Đặt tên đúng `SVx-XX-screen-name.mp4`, dán link Drive/YouTube vào README + Trello | Mỗi SV | TASK-24, TASK-25 |
+| Luyện "chỉnh sửa ngẫu nhiên 5–10 phút" (thêm filter, table→card, field + validation, API rỗng, layout responsive, trạng thái mới) | Cả nhóm | TASK-26 |
+| Tổng duyệt chuỗi: Ngữ cảnh → Vấn đề → Vai trò → Màn hình → Mockup → Task → Nhánh → Commit → PR → OBS → Sản phẩm; đối chiếu README + `screen-inventory.md` | Cả nhóm | TASK-27, TASK-28 |
+| **Nộp bài (deadline 26/10)** | Cả nhóm | – |
 
 ## Quy tắc commit (không commit kiểu `update`, `done`, `final`)
 ```text
