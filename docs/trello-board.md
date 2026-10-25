@@ -8,9 +8,11 @@
 
 ## Thành viên
 
-- **SV1** – Nông dân (3 màn) + giao diện dùng chung auth + Design system & Khả năng tiếp cận
-- **SV2** – Chuyên gia (3 màn) + JavaScript / Dữ liệu giả lập / Tương tác AI + Review PR của SV1, SV3
-- **SV3** – Điều phối HTX + Quản trị viên (6 màn) + Responsive / Tích hợp / Phát hành / QA
+- **SV1** – Nông dân (3 màn) + login/register/notifications (3 màn) + Design system & Khả năng tiếp cận
+- **SV2** – Chuyên gia (3 màn) + forgot-password/profile/settings (3 màn) + JavaScript / Dữ liệu giả lập / Tương tác AI + Review PR của SV1, SV3
+- **SV3** – Điều phối HTX + Quản trị viên (6 màn) + landing/403/404 (3 màn) + Responsive / Tích hợp / Phát hành / QA
+
+> **Nhánh thực tế trên repo:** `feature/farmer-screens` (SV1), `feature/expert-screens` (SV2), `feature/coordinator-admin-screens` (SV3). Các thẻ dưới đây ghi đúng nhánh này thay vì tách mỗi màn hình một nhánh.
 
 ---
 
@@ -33,9 +35,9 @@ TASK-01 – Khởi tạo repo, nhánh main/dev, cấu trúc thư mục, .gitigno
 TASK-02 – Figma/Canva: sơ đồ trang + user flow + bảng kiểm kê (bản đầy đủ)
 TASK-03 – Figma/Canva: wireframe + mockup desktop + bản responsive + trạng thái rỗng/đang tải/lỗi
 TASK-04 – Figma/Canva: nguyên mẫu tương tác AI (AI-1, AI-2, AI-3)
-TASK-24 – Quay OBS toàn bộ màn hình SV1 phụ trách
-TASK-25 – Quay OBS toàn bộ màn hình SV2 & SV3 phụ trách
-TASK-28 – Hoàn thiện README (điền link OBS thật) + docs/ai-usage-report.md + cập nhật screen-list.md
+TASK-24 – Quay OBS 6 màn hình SV1 phụ trách
+TASK-25 – Quay OBS 6 màn hình SV2 + 9 màn hình SV3 phụ trách
+TASK-28 – Hoàn thiện README (điền link OBS thật) + docs/ai-usage-report.md + cập nhật screen-inventory.md
 ```
 
 ## Cột 3 – ĐANG LÀM
@@ -54,7 +56,7 @@ TASK-28 – Hoàn thiện README (điền link OBS thật) + docs/ai-usage-repor
 TASK-05 – pages/farmer-season-dashboard.html (HTML+CSS+JS+data+responsive)
 TASK-06 – pages/farmer-field-log.html
 TASK-07 – pages/farmer-help-request.html (AI-1)
-TASK-08 – Nhóm trang auth: index, login, register, forgot-password
+TASK-08 – Nhóm trang auth: index (SV3), login/register (SV1), forgot-password (SV2)
 TASK-09 – Design system css/style.css + audit khả năng tiếp cận
 TASK-10 – pages/expert-request-queue.html
 TASK-11 – pages/expert-request-detail.html (AI-3)
@@ -68,8 +70,8 @@ TASK-18 – pages/coordinator-season-summary.html
 TASK-19 – pages/admin-dashboard.html
 TASK-20 – pages/admin-crop-management.html
 TASK-21 – pages/admin-user-management.html
-TASK-22 – Nhóm trang cá nhân: profile, settings, notifications, 403, 404
-TASK-23 – Tích hợp: navigation xuyên suốt, kiểm thử đa trình duyệt/di động, phát hành
+TASK-22 – Nhóm trang cá nhân: profile/settings (SV2), notifications (SV1), 403/404 (SV3)
+TASK-23 – Tích hợp: navigation xuyên suốt, kiểm thử đa trình duyệt/di động, phát hành + bật GitHub Pages
 ```
 
 ## Cột 5 – HOÀN THÀNH
@@ -78,7 +80,7 @@ TASK-23 – Tích hợp: navigation xuyên suốt, kiểm thử đa trình duy�
 
 ```text
 TASK-29 – Phân tích ngữ cảnh, vấn đề, vai trò, user flow (docs/project-proposal.md)
-TASK-30 – Bảng kiểm kê màn hình 21 màn hình được duyệt (docs/screen-list.md)
+TASK-30 – Bảng kiểm kê màn hình 21 màn hình được duyệt (docs/screen-inventory.md)
 TASK-31 – Phân công nhóm & lộ trình 20–26/10 (docs/team-assignment.md, docs/roadmap.md)
 TASK-32 – Code prototype 21 màn hình trên nhánh tích hợp (commit 9f85b6e, refactor ac4a643)
 ```
@@ -110,62 +112,62 @@ Nội dung: repo `cse122-cropmate-ai-team02`, cấu trúc đề mục 19 (docs/,
 **TASK-02/03/04 – Figma/Canva** · SV1 lead, SV2/SV3 cùng thực hiện phần màn của mình · Hạn: 21/10/2026
 Sơ đồ trang, user flow theo 7 bước mục 7 của đề; wireframe khung dây; mockup desktop 21 màn hình; bản responsive chính (mobile); trạng thái rỗng/đang tải/lỗi; nguyên mẫu tương tác AI-1/2/3 (nhập → đang xử lý → kết quả → giải thích → chấp nhận/sửa/từ chối). Điền link vào `design/figma-link.txt`.
 
-**TASK-05 – pages/farmer-season-dashboard.html** · SV1 · Hạn: 23/10/2026 · Nhánh: `feature/farmer-season-dashboard`
+**TASK-05 – pages/farmer-season-dashboard.html** · SV1 · Hạn: 23/10/2026 · Nhánh: `feature/farmer-screens`
 Dashboard mùa vụ: stat cards, tiến độ giai đoạn, checklist công việc, yêu cầu gần đây; **AI-2 Season Checklist Generator** (nhập cây trồng + giai đoạn → đang xử lý → checklist → giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại/Lưu).
 
-**TASK-06 – pages/farmer-field-log.html** · SV1 · Hạn: 23/10/2026 · Nhánh: `feature/farmer-field-log`
+**TASK-06 – pages/farmer-field-log.html** · SV1 · Hạn: 23/10/2026 · Nhánh: `feature/farmer-screens`
 CRUD nhật ký đồng ruộng: tạo/sửa/xóa (mềm), gắn ảnh placeholder SVG, timeline, lọc theo mùa vụ + loại hoạt động, tìm kiếm, phân trang; trạng thái rỗng/lỗi.
 
-**TASK-07 – pages/farmer-help-request.html** · SV1 · Hạn: 24/10/2026 · Nhánh: `feature/farmer-help-request`
+**TASK-07 – pages/farmer-help-request.html** · SV1 · Hạn: 24/10/2026 · Nhánh: `feature/farmer-screens`
 CRUD yêu cầu hỗ trợ (2 pha: mô tả → AI phân loại → hoàn thiện gửi); **AI-1 Field Issue Classifier** (mô tả/ảnh → nhóm vấn đề + độ tin cậy + giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại); trạng thái pending/assigned/resolved/rejected/cancelled; trạng thái thất bại: "Không đủ dữ liệu", "AI chưa chắc chắn", "Không thể xử lý lúc này" + Thử lại/Dùng thủ công.
 
-**TASK-08 – Nhóm trang auth** · SV1 · Hạn: 22/10/2026 · Nhánh: `feature/shared-auth-pages`
-`index.html` (landing: hero, tính năng, AI, hành trình), `pages/login.html` (role-picker, demo accounts), `pages/register.html` (validation: required/email/phone/đồng ý điều khoản), `pages/forgot-password.html` (trạng thái thành công).
+**TASK-08 – Nhóm trang auth** · SV1 (login/register), SV2 (forgot-password), SV3 (index) · Hạn: 22/10/2026 · Nhánh: `feature/farmer-screens` + `feature/expert-screens` + `feature/coordinator-admin-screens`
+`index.html` (landing: hero, tính năng, AI, hành trình — SV3), `pages/login.html` (role-picker, demo accounts — SV1), `pages/register.html` (validation: required/email/phone/đồng ý điều khoản — SV1), `pages/forgot-password.html` (trạng thái thành công — SV2).
 
-**TASK-09 – Design system & a11y** · SV1 · Hạn: 21/10/2026 · Nhánh: `feature/design-system`
+**TASK-09 – Design system & a11y** · SV1 · Hạn: 21/10/2026 · Nhánh: `feature/farmer-screens`
 `css/style.css` (tokens màu/typography/spacing, components: topbar, sidebar, btn, card, badge, table, form, modal, toast, tabs, skeleton, ai-panel), `css/responsive.css` (breakpoint 1024/768/420, drawer mobile, table→card); audit contrast, alt text, focus, skip-link, aria.
 
-**TASK-10 – pages/expert-request-queue.html** · SV2 · Hạn: 23/10/2026 · Nhánh: `feature/expert-request-queue`
+**TASK-10 – pages/expert-request-queue.html** · SV2 · Hạn: 23/10/2026 · Nhánh: `feature/expert-screens`
 Hàng đợi yêu cầu: tìm kiếm, lọc theo trạng thái/ưu tiên/cây trồng, sắp xếp, badge AI phân loại, mở chi tiết `?id=`; trạng thái rỗng/lỗi/thành công.
 
-**TASK-11 – pages/expert-request-detail.html** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/expert-request-detail`
+**TASK-11 – pages/expert-request-detail.html** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/expert-screens`
 Chi tiết yêu cầu: đầy đủ bối cảnh (ảnh, nhật ký liên quan, AI classification); **AI-3 Farm Log Summarizer** (tóm tắt diễn biến mùa vụ → giải thích → Chấp nhận/Sửa/Từ chối/Tạo lại); form phản hồi (validation min 20 ký tự), đính kèm tài nguyên từ thư viện, chuyển trạng thái assigned/resolved/rejected; lý do từ chối bắt buộc.
 
-**TASK-12 – pages/expert-resource-library.html** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/expert-resource-library`
+**TASK-12 – pages/expert-resource-library.html** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/expert-screens`
 CRUD tài nguyên tư vấn (tạo/sửa/lưu trữ), tìm kiếm + lọc theo loại/cây trồng, card view, đếm lượt dùng; trạng thái rỗng/lỗi; xóa mềm (archive).
 
-**TASK-13 – Mock data + API** · SV2 · Hạn: 22/10/2026 · Nhánh: `feature/mock-api`
+**TASK-13 – Mock data + API** · SV2 · Hạn: 22/10/2026 · Nhánh: `feature/expert-screens`
 `js/data.js`: seed 10 thực thể (users, crops, farms, fields, seasons, fieldLogs, helpRequests, resources, events, notifications). `js/api.js`: list/get/create/update/remove async (độ trễ ~450ms), session, role switch, `forceFailNext()` mô phỏng lỗi mạng, `reset()`. **Yêu cầu code:** viết theo phong cách sinh viên năm 2 — vòng lặp `for` đơn giản thay hàm nâng cao, chú thích tiếng Việt giải thích từng bước, không dùng thư viện ngoài.
 
-**TASK-14 – Engine AI** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/ai-engine`
+**TASK-14 – Engine AI** · SV2 · Hạn: 24/10/2026 · Nhánh: `feature/expert-screens`
 `js/modules/ai.js`: `classifyIssue`, `generateChecklist`, `summarizeSeason` (rule-based, mode ok/insufficient/uncertain/network); `AiError.code` để UI render trạng thái thất bại kèm hành động Thử lại/Dùng thủ công/Báo cáo; kết quả AI phải lưu vào trạng thái ứng dụng. **Yêu cầu code:** từ điển từ khóa và ngân hàng checklist viết dạng mảng thường, vòng lặp đơn giản, chú thích tiếng Việt ở mỗi bước (đọc hiểu được khi bảo vệ).
 
 **TASK-15 – Review PR chéo** · SV2 · Hạn: 24–25/10/2026 · Nhánh: –
 SV2 review & approve PR của SV1 và SV3 theo checklist màn hình; ghi nhận review trong mô tả PR; không tự merge PR của mình.
 
-**TASK-16/17/18 – Nhóm Điều phối** · SV3 · Hạn: 23–24/10/2026 · Nhánh: `feature/coordinator-*`
+**TASK-16/17/18 – Nhóm Điều phối** · SV3 · Hạn: 23–24/10/2026 · Nhánh: `feature/coordinator-admin-screens`
 `pages/coordinator-farm-overview.html` (stat nông hộ, cards mùa vụ + progress, modal chi tiết, timeline hợp nhất sự kiện/nhật ký); `pages/coordinator-calendar.html` (lưới tháng/tuần, CRUD sự kiện, hủy mềm, validation); `pages/coordinator-season-summary.html` (KPI, bảng nông hộ table→card, ghi chú lưu localStorage, xuất CSV, lưu trữ báo cáo → disabled).
 
-**TASK-19/20/21 – Nhóm Quản trị** · SV3 · Hạn: 24/10/2026 · Nhánh: `feature/admin-*`
+**TASK-19/20/21 – Nhóm Quản trị** · SV3 · Hạn: 24/10/2026 · Nhánh: `feature/coordinator-admin-screens`
 `pages/admin-dashboard.html` (stat cards, biểu đồ CSS thuần: trạng thái yêu cầu, tài khoản theo vai trò, hoạt động gần đây); `pages/admin-crop-management.html` (CRUD danh mục cây trồng, tìm kiếm/lọc); `pages/admin-user-management.html` (CRUD tài khoản, khóa/mở khóa, phân trang 7/trang).
 
-**TASK-22 – Nhóm trang cá nhân** · SV3 · Hạn: 24/10/2026 · Nhánh: `feature/shared-personal-pages`
-`pages/profile.html` (xem/sửa hồ sơ, đổi mật khẩu mock), `pages/settings.html` (thông báo, cỡ chữ, giảm chuyển động, reset dữ liệu mẫu), `pages/notifications.html` (segmented lọc loại/đã đọc, đánh dấu đọc, xóa), `pages/403.html` (role guard, nút đổi vai trò), `pages/404.html`.
+**TASK-22 – Nhóm trang cá nhân** · SV2 (profile/settings), SV1 (notifications), SV3 (403/404) · Hạn: 24/10/2026 · Nhánh: `feature/farmer-screens` + `feature/expert-screens` + `feature/coordinator-admin-screens`
+`pages/profile.html` (xem/sửa hồ sơ, đổi mật khẩu mock — SV2), `pages/settings.html` (thông báo, cỡ chữ, giảm chuyển động, reset dữ liệu mẫu — SV2), `pages/notifications.html` (segmented lọc loại/đã đọc, đánh dấu đọc, xóa — SV1), `pages/403.html` (role guard, nút đổi vai trò — SV3), `pages/404.html` (SV3).
 
 **TASK-23 – Tích hợp & phát hành** · SV3 · Hạn: 25/10/2026 · Nhánh: `dev` → `main`
-Navigation xuyên suốt 4 vai trò (`js/main.js`), role guard + switcher, kiểm thử đa trình duyệt (Chrome/Edge/Firefox) + di động 420px, sửa lỗi tích hợp, merge `dev` → `main`, đánh tag `v1.0`.
+Navigation xuyên suốt 4 vai trò (`js/main.js`), role guard + switcher, kiểm thử đa trình duyệt (Chrome/Edge/Firefox) + di động 420px, sửa lỗi tích hợp, merge `dev` → `main`, đánh tag `v1.0`. Bật **GitHub Pages** (Settings → Pages → Source: GitHub Actions) để workflow `.github/workflows/pages.yml` deploy từ `main`, kiểm tra URL live và ghi vào README.
 
-**TASK-24/25 – Video OBS** · SV1 / SV2+SV3 · Hạn: 26/10/2026
-Mỗi màn hình 1 video đúng quy tắc mục 17 của đề: có mặt SV, hiển thị mockup Figma, mở đúng file HTML/CSS/JS, giải thích bố cục + logic, chỉnh sửa trực tiếp, chạy tương tác, commit lên GitHub, nêu TASK/nhánh/commit. Đặt tên `SV1-01-screen-name.mp4`… Không push video lên repo; chỉ dán link Drive/YouTube vào README (cột "Video OBS") và mô tả thẻ Trello.
+**TASK-24/25 – Video OBS** · TASK-24: SV1 (6 video) · TASK-25: SV2 (6 video) + SV3 (9 video) · Hạn: 26/10/2026
+Mỗi màn hình 1 video đúng quy tắc mục 17 của đề: có mặt SV, hiển thị mockup Figma, mở đúng file HTML/CSS/JS, giải thích bố cục + logic, chỉnh sửa trực tiếp, chạy tương tác, commit lên GitHub, nêu TASK/nhánh/commit. Đặt tên `SV1-01-login.mp4`… theo cột "Video OBS" trong `docs/screen-inventory.md`. Không push video lên repo; chỉ dán link Drive/YouTube vào README (cột "Video OBS") và mô tả thẻ Trello.
 
 **TASK-26 – Chỉnh sửa ngẫu nhiên khi bảo vệ** · Người được giảng viên chỉ định · Hạn: ngày bảo vệ
 Luyện sẵn 5–10 phút cho: thêm filter, đổi table→card, thêm field + validation, xử lý API rỗng, đổi layout responsive, thêm trạng thái mới.
 
 **TASK-27 – Tổng duyệt** · Cả nhóm · Hạn: 26/10/2026
-Chạy lại chuỗi: Ngữ cảnh → Vấn đề → Vai trò → Màn hình → Mockup → TASK → Nhánh → Commit → PR → OBS → Sản phẩm; đối chiếu README + docs/screen-list.md.
+Chạy lại chuỗi: Ngữ cảnh → Vấn đề → Vai trò → Màn hình → Mockup → TASK → Nhánh → Commit → PR → OBS → Sản phẩm; đối chiếu README + docs/screen-inventory.md.
 
 **TASK-28 – Hoàn thiện hồ sơ** · Cả nhóm (SV3 tổng hợp) · Hạn: 26/10/2026
-Điền link OBS thật vào README; hoàn thiện `docs/ai-usage-report.md` (công cụ AI, prompt, phần AI sinh/phần tự sửa, lỗi AI, cách kiểm chứng, tính năng mock vs API thật); cập nhật trạng thái 21 màn hình trong `docs/screen-list.md`.
+Điền link OBS thật vào README; hoàn thiện `docs/ai-usage-report.md` (công cụ AI, prompt, phần AI sinh/phần tự sửa, lỗi AI, cách kiểm chứng, tính năng mock vs API thật); cập nhật trạng thái 21 màn hình trong `docs/screen-inventory.md`.
 
 **TASK-29/30/31/32 – Đã hoàn thành (ghi nhận)** · Cả nhóm
 Phân tích đề + proposal; bảng kiểm kê 21 màn hình (mục 8 + màn hình dùng chung); phân công & lộ trình; prototype code 21 màn hình đã push (commit `9f85b6e`).
