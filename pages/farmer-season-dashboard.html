@@ -93,6 +93,19 @@
     <div id="ai2-output" aria-live="polite"></div>
   </section>
 
+  <!-- Checklist AI-2 đã lưu: đọc lại từ LocalStorage để kết quả AI
+       thực sự nằm trong dữ liệu ứng dụng, không chỉ hiện toast rồi mất. -->
+  <section class="card" style="margin-top:16px;" aria-labelledby="saved-checklists-title">
+    <div class="card__head">
+      <h2 id="saved-checklists-title">Checklist đã lưu</h2>
+      <span class="small muted" id="saved-checklists-count"></span>
+    </div>
+    <div id="saved-checklists" aria-live="polite">
+      <div class="skeleton skeleton--line w-80"></div>
+      <div class="skeleton skeleton--line w-60"></div>
+    </div>
+  </section>
+
 </main>
 
 <script src="../js/data.js"></script>
@@ -268,15 +281,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     out.querySelector('[data-ai-accept]').addEventListener('click', function () {
       const chosen = [];
-      out.querySelectorAll('#ai2-items input[type=checkbox]').forEach(function (cb, i) {
-        if (cb.checked) chosen.push(lastResult.items[i]);
+      out.querySelectorAll('#ai2-items input[type=checkbox]').forEach(function (cb) {
+        if (!cb.checked) return;
+        const idx = Number(cb.getAttribute('data-idx'));
+        const goc = lastResult.items[idx];
+        // Đọc lại chữ trong <strong>: nếu người dùng đã bấm "Sửa" thì
+        // nội dung hiển thị mới là nội dung họ muốn lưu.
+        const strong = cb.closest('label').querySelector('strong');
+        chosen.push({
+          task: strong ? strong.textContent.trim() : goc.task,
+          reason: goc.reason,
+          priority: goc.priority
+        });
       });
       if (!chosen.length) { ui.toast('Vui lòng tick chọn ít nhất 1 công việc để lưu.', 'warning'); return; }
-      const saved = JSON.parse(localStorage.getItem('cropmate_checklists') || '[]');
-      saved.push({ id: 'cl' + Date.now(), cropName: res.cropName, stage: res.stage, items: chosen, savedAt: ui.todayISO() });
-      localStorage.setItem('cropmate_checklists', JSON.stringify(saved));
+      const saved = readChecklists();
+      saved.push({
+        id: 'cl' + Date.now(),
+        farmerId: me.id,
+        cropId: cropSel.value,
+        cropName: res.cropName,
+        stage: res.stage,
+        items: chosen,
+        savedAt: ui.todayISO()
+      });
+      writeChecklists(saved);
       ui.toast('Đã lưu ' + chosen.length + ' công việc vào checklist của bạn.', 'success');
       out.innerHTML = '';
+      lastResult = null;
+      loadSavedChecklists();
     });
     out.querySelector('[data-ai-edit]').addEventListener('click', function () {
       out.querySelectorAll('#ai2-items strong').forEach(function (el) { el.contentEditable = 'true'; el.style.borderBottom = '1px dashed var(--green-700)'; });
@@ -307,9 +340,72 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  /* ================= Checklist đã lưu (kết quả AI-2 nằm trong dữ liệu) ================= */
+  function readChecklists() {
+    try { return JSON.parse(localStorage.getItem('cropmate_checklists') || '[]'); }
+    catch (e) { return []; }
+  }
+  function writeChecklists(list) {
+    localStorage.setItem('cropmate_checklists', JSON.stringify(list));
+  }
+  function focusAiForm() {
+    document.getElementById('ai2-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    cropSel.focus();
+  }
+
+  function loadSavedChecklists() {
+    const box = document.getElementById('saved-checklists');
+    const count = document.getElementById('saved-checklists-count');
+    const mine = readChecklists().filter(function (c) { return c.farmerId === me.id || !c.farmerId; });
+    count.textContent = mine.length ? mine.length + ' checklist' : '';
+
+    if (!mine.length) {
+      box.innerHTML = ui.emptyState({
+        icon: 'leaf',
+        title: 'Chưa lưu checklist nào',
+        desc: 'Tạo checklist bằng AI ở khung phía trên, tick chọn công việc rồi bấm "Chấp nhận & lưu" — kết quả sẽ xuất hiện tại đây.',
+        action: '<button type="button" class="btn btn--secondary" data-create-checklist>' + ui.icon('plus') + ' Tạo checklist bằng AI</button>'
+      });
+      box.querySelector('[data-create-checklist]').addEventListener('click', focusAiForm);
+      return;
+    }
+
+    box.innerHTML = '<div class="stack">' + mine.map(function (c) {
+      return '<article class="card" style="box-shadow:none" data-cl="' + c.id + '">' +
+        '<div class="row row--between" style="align-items:flex-start">' +
+          '<div><strong>' + ui.escapeHtml(c.cropName) + ' · ' + ui.escapeHtml(c.stage) + '</strong>' +
+          '<div class="small muted">Lưu ngày ' + ui.fmtDate(c.savedAt) + ' · ' + c.items.length + ' công việc</div></div>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-cl-delete="' + c.id + '" aria-label="Xóa checklist ' + ui.escapeHtml(c.cropName) + '">' + ui.icon('trash') + ' Xóa</button>' +
+        '</div>' +
+        '<ul class="stack" style="margin:10px 0 0; padding-left:18px">' +
+          c.items.map(function (it) {
+            return '<li>' + ui.escapeHtml(it.task) +
+              ' <span class="badge badge--' + (it.priority === 'high' ? 'danger' : it.priority === 'medium' ? 'warning' : 'neutral') + '">' + ui.statusLabel(it.priority) + '</span></li>';
+          }).join('') +
+        '</ul></article>';
+    }).join('') + '</div>';
+
+    box.querySelectorAll('[data-cl-delete]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const id = btn.getAttribute('data-cl-delete');
+        ui.confirmModal({
+          title: 'Xóa checklist đã lưu?',
+          message: 'Checklist này sẽ bị xóa khỏi dữ liệu ứng dụng. Bạn vẫn có thể tạo lại bằng AI.',
+          okText: 'Xóa checklist',
+          danger: true
+        }).then(function (ok) {
+          if (!ok) return;
+          writeChecklists(readChecklists().filter(function (c) { return c.id !== id; }));
+          ui.toast('Đã xóa checklist.', 'success');
+          loadSavedChecklists();
+        });
+      });
+    });
+  }
+
   /* Boot */
   ui.bindLiveValidation(document.getElementById('ai2-form'));
-  loadStats(); loadSeasons(); loadActivity();
+  loadStats(); loadSeasons(); loadActivity(); loadSavedChecklists();
 });
 </script>
 </body>

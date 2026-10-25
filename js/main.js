@@ -134,6 +134,12 @@
     main.replaceWith(shell);
     shell.appendChild(main);
 
+    /* Footer dùng chung: giữ đúng cấu trúc ngữ nghĩa header/main/footer ở mọi trang ứng dụng */
+    const footer = document.createElement('footer');
+    footer.className = 'footer';
+    footer.textContent = 'CropMate AI · BTL môn Phát triển ứng dụng Web cơ bản (CSE122) · Nhóm 2 – 67KTPM1';
+    document.body.appendChild(footer);
+
     /* Dropdown avatar */
     const dd = document.querySelector('[data-dropdown]');
     dd.querySelector('[data-dropdown-toggle]').addEventListener('click', function (e) {

@@ -131,7 +131,14 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('result-count').textContent = list.length + ' kết quả';
 
     if (!list.length) {
-      grid.innerHTML = state.tab === 'active'
+      const anyInTab = all.some(function (r) { return r.status === state.tab; });
+      grid.innerHTML = anyInTab
+        ? ui.emptyState({
+            icon: 'search', title: 'Không tìm thấy tài nguyên',
+            desc: 'Thử đổi từ khóa hoặc bộ lọc loại, cây trồng, chủ đề.',
+            action: '<button type="button" class="btn btn--secondary" data-clear-filter>' + ui.icon('refresh') + ' Xóa bộ lọc</button>'
+          })
+        : state.tab === 'active'
         ? ui.emptyState({
             icon: 'book', title: 'Chưa có tài nguyên nào',
             desc: 'Thêm bài viết, video hoặc hướng dẫn đầu tiên để gắn kèm khi tư vấn cho nông hộ.',
@@ -143,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
           });
       const cta = grid.querySelector('[data-open-create]');
       if (cta) cta.addEventListener('click', function () { openResourceModal(null); });
+      const clear = grid.querySelector('[data-clear-filter]');
+      if (clear) clear.addEventListener('click', clearFilters);
       return;
     }
 
@@ -328,6 +337,17 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('f-topic').addEventListener('change', function () {
     state.topic = this.value; render();
   });
+
+  /* Xóa toàn bộ bộ lọc để thoát trạng thái "không tìm thấy" */
+  function clearFilters() {
+    state.q = ''; state.type = 'all'; state.cropId = 'all'; state.topic = 'all';
+    document.getElementById('f-q').value = '';
+    document.getElementById('f-type').value = 'all';
+    document.getElementById('f-crop').value = 'all';
+    document.getElementById('f-topic').value = 'all';
+    render();
+    document.getElementById('f-q').focus();
+  }
 
   loadResources();
 });

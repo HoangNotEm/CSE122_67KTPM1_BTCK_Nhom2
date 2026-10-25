@@ -21,13 +21,13 @@ feature/expert-screens              → SV2: chuyên gia + forgot-password/profi
 feature/coordinator-admin-screens   → SV3: điều phối + quản trị + landing/403/404
 ```
 
-Ví dụ: `feature/farmer-season-dashboard`, `feature/expert-request-queue`, `feature/admin-user-management`, `fix/help-request-validation`.
+Ví dụ (nếu cần tách nhỏ): `feature/farmer-season-dashboard`, `fix/help-request-validation`. Ba nhánh nhóm ở trên là nhánh nộp chính, gắn với cột "Nhánh" trong bảng kiểm kê.
 
 ## 3. Quy trình bắt buộc cho mỗi màn hình
 ```text
 Trello (task ở CẦN LÀM)
 → kéo sang ĐANG LÀM
-→ git checkout -b feature/<ten-man-hinh> từ dev
+→ git checkout <nhánh nhóm> && git pull (hoặc tạo feature/<ten-man-hinh> từ dev nếu cần tách)
 → viết mã
 → commit đúng quy ước (không dùng update/done/final)
 → git push + tạo PR vào dev, gắn link task Trello

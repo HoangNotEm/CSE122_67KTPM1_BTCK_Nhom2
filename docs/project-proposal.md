@@ -21,8 +21,8 @@ Sản phẩm **Frontend nguyên mẫu** (không cần máy chủ) với:
 ## 4. Mục tiêu (mapping O1–O7 của đề bài)
 | Mục tiêu đề bài | Cách thực hiện |
 |---|---|
-| O1. Hành trình người dùng rõ | §2 hành trình theo vai trò trong `screen-list.md` |
-| O2. ≥ 3 màn hình/vai trò | 3–6 màn hình/vai trò, tổng 21 (xem `screen-list.md`) |
+| O1. Hành trình người dùng rõ | §2 hành trình theo vai trò trong `screen-inventory.md` |
+| O2. ≥ 3 màn hình/vai trò | 3–6 màn hình/vai trò, tổng 21 (xem `screen-inventory.md`) |
 | O3. CRUD/trạng thái có ý nghĩa | Thay Xóa bằng Hủy/Khóa/Lưu trữ khi hợp lý (yêu cầu hỗ trợ, báo cáo, tài khoản) |
 | O4. JavaScript/DOM | Tìm kiếm, lọc, validation, modal, tab, toast, render dữ liệu |
 | O5. Dữ liệu giả | `js/data.js` + `js/api.js` (LocalStorage, giả lập độ trễ) |
