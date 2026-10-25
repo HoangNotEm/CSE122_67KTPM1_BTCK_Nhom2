@@ -110,7 +110,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!rows.length) {
       box.innerHTML = state.users.length
-        ? ui.emptyState({ icon: 'search', title: 'Không tìm thấy tài khoản', desc: 'Thử đổi từ khóa tìm kiếm hoặc bộ lọc vai trò, trạng thái.' })
+        ? ui.emptyState({
+            icon: 'search', title: 'Không tìm thấy tài khoản',
+            desc: 'Thử đổi từ khóa tìm kiếm hoặc bộ lọc vai trò, trạng thái.',
+            action: '<button type="button" class="btn btn--secondary" data-action="clear-filter">' + ui.icon('refresh') + ' Xóa bộ lọc</button>'
+          })
         : ui.emptyState({
             icon: 'users', title: 'Chưa có tài khoản nào',
             desc: 'Thêm tài khoản đầu tiên để bắt đầu vận hành nền tảng.',
@@ -187,6 +191,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!btn) return;
     const action = btn.getAttribute('data-action');
     if (action === 'add') { openUserModal(null); return; }
+    if (action === 'clear-filter') {
+      /* Đưa bộ lọc và phân trang về mặc định */
+      state.q = ''; state.role = ''; state.status = ''; state.page = 1;
+      document.getElementById('f-search').value = '';
+      document.getElementById('f-role').value = '';
+      document.getElementById('f-status').value = '';
+      render();
+      document.getElementById('f-search').focus();
+      return;
+    }
     const id = btn.getAttribute('data-id');
     const user = state.users.find(function (u) { return u.id === id; });
     if (!user) return;
