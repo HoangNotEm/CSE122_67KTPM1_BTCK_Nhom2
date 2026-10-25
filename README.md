@@ -82,7 +82,6 @@ Mỗi tính năng đi đủ chu trình **Nhập → Kiểm tra hợp lệ → Đ
 ## Mockup UI/UX (Figma-ready)
 Bộ ảnh dựng sẵn để nhập Figma nằm trong [`design/figma/screens/`](design/figma/screens): **30 ảnh PNG** xuất từ chính giao diện đã code, gồm bìa + design system, đủ **21/21 màn hình**, **3 trạng thái AI thành công**, **3 trạng thái AI lỗi** và **2 màn hình mobile 390px**.
 
-- Hướng dẫn import từng bước (10–15 phút): [`design/figma/README.md`](design/figma/README.md)
 - Link Figma của nhóm dán vào [`design/figma-link.txt`](design/figma-link.txt) sau khi import.
 - Ảnh dùng đúng tỉ lệ 1x (desktop 1440px, mobile 390px), không cần chỉnh kích thước khi đặt vào frame.
 

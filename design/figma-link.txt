@@ -4,5 +4,4 @@ DÁN LINK FIGMA CỦA NHÓM VÀO ĐÂY sau khi import bộ ảnh dựng sẵn:
 - Trạng thái loading/empty/error + 3 tính năng AI: cùng file Figma trên (page "02 – AI states & Mobile")
 
 Bộ ảnh: design/figma/screens/ — 30 ảnh, đủ 21 màn hình + 3 AI thành công + 3 AI lỗi + 2 mobile.
-Hướng dẫn import 10–15 phút: design/figma/README.md
 Cách lấy link: Figma → Share → Anyone with the link → Can view → Copy link.
