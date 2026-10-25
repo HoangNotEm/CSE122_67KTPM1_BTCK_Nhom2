@@ -98,7 +98,7 @@ Bộ mockup **30 ảnh** đã đưa lên Figma, chia 3 page (link công khai, kh
 - [`screen-list.md`](docs/screen-list.md) — bảng kiểm kê 21 màn hình + ma trận bao phủ trạng thái + mapping CRUD
 - [`project-proposal.md`](docs/project-proposal.md) · [`roles-and-features.md`](docs/roles-and-features.md)
 - [`team-assignment.md`](docs/team-assignment.md) — phân công 3 SV + trách nhiệm xuyên suốt
-- [`roadmap.md`](docs/roadmap.md) — lộ trình 8 tuần + bảng Trello
+- [`roadmap.md`](docs/roadmap.md) — lộ trình 20–26/10 + bảng Trello
 - [`git-workflow.md`](docs/git-workflow.md) — chiến lược nhánh + quy ước commit
 - [`ai-usage-report.md`](docs/ai-usage-report.md) — khai báo sử dụng AI
 
