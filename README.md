@@ -11,7 +11,7 @@ Sản phẩm giải quyết 4 vấn đề thực tế của nông hộ nhỏ: **
 
 | Thành viên | Họ tên – MSSV | Vai trò chính | Trách nhiệm xuyên suốt |
 |---|---|---|---|
-| SV1 | _(điền họ tên – MSSV)_ | Nông dân + auth/notifications | Design system, điều hướng, khả năng tiếp cận |
+| SV1 | Lương Hoàng Anh – 2551170848 | Nông dân + auth/notifications | Design system, điều hướng, khả năng tiếp cận |
 | SV2 | _(điền họ tên – MSSV)_ | Chuyên gia + tài khoản | JavaScript, dữ liệu giả lập, 3 tính năng AI |
 | SV3 | _(điền họ tên – MSSV)_ | Điều phối HTX + Quản trị + hệ thống | Responsive, tích hợp, phát hành, QA |
 
