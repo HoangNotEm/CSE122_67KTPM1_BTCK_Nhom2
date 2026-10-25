@@ -18,7 +18,7 @@ project-root/
 ├── README.md
 ├── index.html              ← landing page
 ├── docs/                   ← tài liệu nhóm (đề xuất, kiểm kê màn hình, phân công, Trello…)
-├── design/                 ← figma-link.txt + figma/ (30 ảnh mockup + hướng dẫn)
+├── design/                 ← figma-link.txt + figma/ (30 ảnh mockup)
 ├── pages/                  ← 20 màn hình còn lại (login, register, farmer-*, expert-*, coordinator-*, admin-*, 403, 404…)
 ├── assets/
 │   ├── images/             ← ảnh minh hoạ (nếu có)
@@ -79,11 +79,15 @@ Mỗi tính năng đi đủ chu trình **Nhập → Kiểm tra hợp lệ → Đ
 | AI-2 | Season Checklist Generator – checklist công việc theo cây trồng/giai đoạn | `pages/farmer-season-dashboard.html` |
 | AI-3 | Farm Log Summarizer – tóm tắt diễn biến mùa vụ cho chuyên gia | `pages/expert-request-detail.html` |
 
-## Mockup UI/UX (Figma-ready)
-Bộ ảnh dựng sẵn để nhập Figma nằm trong [`design/figma/screens/`](design/figma/screens): **30 ảnh PNG** xuất từ chính giao diện đã code, gồm bìa + design system, đủ **21/21 màn hình**, **3 trạng thái AI thành công**, **3 trạng thái AI lỗi** và **2 màn hình mobile 390px**.
+## Mockup UI/UX (Figma)
+Bộ mockup **30 ảnh** đã đưa lên Figma, chia 3 page (link công khai, không cần đăng nhập):
 
-- Link Figma của nhóm dán vào [`design/figma-link.txt`](design/figma-link.txt) sau khi import.
-- Ảnh dùng đúng tỉ lệ 1x (desktop 1440px, mobile 390px), không cần chỉnh kích thước khi đặt vào frame.
+- [File mockup UI/UX](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled)
+- [Page 00 – Bìa & Design System](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=0-1)
+- [Page 01 – Desktop (21 màn hình)](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=1-3269)
+- [Page 02 – AI states & Mobile](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=1-3270)
+
+Ảnh gốc 1x (desktop 1440px, mobile 390px) vẫn nằm trong [`design/figma/screens/`](design/figma/screens); danh sách link lưu tại [`design/figma-link.txt`](design/figma-link.txt).
 
 ## Công nghệ & kiến trúc
 - HTML5 ngữ nghĩa + CSS thuần (design system token trong `css/style.css`, responsive trong `css/responsive.css`), **không framework ngoài** — chạy offline qua `file://`.
