@@ -277,6 +277,7 @@ button { font-family: inherit; }
 .table tbody tr:hover { background: var(--green-50); }
 .table .cell-main { font-weight: 600; color: var(--text); }
 .table .cell-sub { font-size: .8rem; color: var(--text-3); }
+.table--report th:first-child, .table--report td:first-child { min-width: 124px; }
 .table__actions { display: flex; gap: 6px; justify-content: flex-end; }
 .table-card-label { display: none; }
 
@@ -424,6 +425,8 @@ button { font-family: inherit; }
 .ai-panel__mode { margin-left: auto; }
 .ai-panel__mode select { font-size: .78rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2); }
 .ai-result { border: 1px dashed #9ccc9f; background: var(--surface); border-radius: var(--radius-s); padding: 14px; margin-top: 12px; }
+.ai-result svg { width: 18px; height: 18px; flex: none; }
+.ai-result .row > span > svg { width: 16px; height: 16px; }
 .ai-result__title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-weight: 700; margin-bottom: 8px; }
 .confidence { font-size: .76rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--success-bg); color: var(--success); }
 .confidence--low { background: var(--warning-bg); color: var(--warning); }
@@ -469,7 +472,8 @@ button { font-family: inherit; }
 }
 .hero h1 { color: #fff; font-size: 2.1rem; max-width: 780px; margin: 0 auto 14px; }
 .hero p { max-width: 640px; margin: 0 auto 26px; color: #dceddc; font-size: 1.05rem; }
-.hero .btn--light { background: #fff; color: var(--green-900); }
+.btn--light { background: #fff; color: var(--green-900); }
+.btn--light:hover { background: var(--green-50); }
 .hero .btn--outline-light { border: 1px solid rgba(255,255,255,.7); color: #fff; }
 .hero .btn--outline-light:hover { background: rgba(255,255,255,.12); }
 .hero__cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -488,6 +492,7 @@ button { font-family: inherit; }
 
 /* ---------- 19. Misc ---------- */
 .muted { color: var(--text-2); } .small { font-size: .84rem; }
+.small.muted > svg { width: 15px; height: 15px; flex: none; vertical-align: -2px; }
 .mt-0 { margin-top: 0; } .mb-0 { margin-bottom: 0; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .row--between { justify-content: space-between; }
