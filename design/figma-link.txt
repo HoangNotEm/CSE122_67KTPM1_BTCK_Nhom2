@@ -1,5 +1,8 @@
-Dán link Figma/Canva của nhóm vào đây sau khi được duyệt:
-- Sơ đồ trang + luồng người dùng: <link>
-- Mockup desktop + responsive: <link>
-- Trạng thái loading/empty/error: <link>
-- Mockup tương tác AI: <link>
+DÁN LINK FIGMA CỦA NHÓM VÀO ĐÂY sau khi import bộ ảnh dựng sẵn:
+- Sơ đồ trang + luồng người dùng (FigJam): <dán link FigJam>
+- Mockup desktop + responsive: <dán link file Figma design>
+- Trạng thái loading/empty/error + 3 tính năng AI: cùng file Figma trên (page "02 – AI states & Mobile")
+
+Bộ ảnh: design/figma/screens/ — 30 ảnh, đủ 21 màn hình + 3 AI thành công + 3 AI lỗi + 2 mobile.
+Hướng dẫn import 10–15 phút: design/figma/README.md
+Cách lấy link: Figma → Share → Anyone with the link → Can view → Copy link.

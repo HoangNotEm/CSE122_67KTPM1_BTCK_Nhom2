@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropMate AI – Cover</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1440px; height: 900px; overflow: hidden;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #f4fff7;
+    background: #123d1c;
+    position: relative;
+  }
+  .bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 600px at 85% 5%, rgba(165,214,167,.22), transparent 60%),
+      radial-gradient(700px 500px at -5% 100%, rgba(249,168,37,.16), transparent 60%),
+      linear-gradient(135deg, #0d2f16 0%, #174a24 55%, #1b5e20 100%);
+  }
+  .grid-lines {
+    position: absolute; inset: 0; opacity: .12;
+    background-image:
+      linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at 75% 45%, #000 10%, transparent 70%);
+  }
+  .wrap { position: relative; display: grid; grid-template-columns: 1.15fr .85fr; height: 100%; padding: 64px 72px 52px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #a5d6a7; font-weight: 700; }
+  .eyebrow span { width: 34px; height: 2px; background: #a5d6a7; display: inline-block; }
+  h1 { font-size: 96px; line-height: .98; letter-spacing: -3px; margin: 28px 0 20px; font-weight: 800; }
+  h1 em { font-style: normal; color: #ffd166; }
+  .sub { font-size: 24px; line-height: 1.45; color: #d7ecd9; max-width: 620px; font-weight: 400; }
+  .meta { display: flex; gap: 12px; margin-top: 34px; flex-wrap: wrap; }
+  .chip { border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.06); border-radius: 999px; padding: 10px 18px; font-size: 14px; font-weight: 600; color: #eaf7ec; }
+  .chip--accent { background: #ffd166; border-color: #ffd166; color: #3e2a00; }
+  .footer { position: absolute; left: 72px; right: 72px; bottom: 44px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 13px; color: #9dc3a1; }
+  .palette { display: flex; gap: 8px; }
+  .palette i { width: 30px; height: 30px; border-radius: 8px; display: block; border: 1px solid rgba(255,255,255,.18); }
+  .side { position: relative; display: flex; align-items: center; justify-content: center; }
+  .board {
+    width: 470px; background: #f7fbf7; color: #22332a; border-radius: 24px;
+    padding: 22px; box-shadow: 0 40px 90px rgba(0,0,0,.45); transform: rotate(-2.5deg);
+  }
+  .board-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .logo { width: 38px; height: 38px; border-radius: 11px; background: #2e7d32; color: #fff; display: grid; place-items: center; }
+  .logo svg { width: 22px; height: 22px; }
+  .board-top b { font-size: 16px; }
+  .board-top small { display: block; color: #6b7f70; font-size: 11px; font-weight: 400; margin-top: 2px; }
+  .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .role { border: 1px solid #dfe7df; border-radius: 14px; padding: 12px; background: #fff; }
+  .role b { font-size: 13px; display: block; }
+  .role small { color: #6b7f70; font-size: 10.5px; line-height: 1.4; display: block; margin-top: 4px; }
+  .role .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .ai-card { margin-top: 10px; border-radius: 14px; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 12px 14px; }
+  .ai-card b { font-size: 12px; color: #1b5e20; display: block; }
+  .ai-card p { font-size: 11px; color: #4d6653; margin-top: 4px; line-height: 1.45; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-top: 12px; }
+  .bars i { flex: 1; background: #a5d6a7; border-radius: 4px 4px 0 0; }
+  .bars i:nth-child(3n) { background: #2e7d32; }
+  .stamp { position: absolute; right: -12px; top: 34px; background: #ffd166; color: #4a3300; font-size: 12px; font-weight: 800; letter-spacing: .12em; padding: 10px 16px; border-radius: 8px; transform: rotate(6deg); box-shadow: 0 10px 25px rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grid-lines"></div>
+<div class="wrap">
+  <div>
+    <div class="eyebrow"><span></span> CSE122 · BTL-04 · UI/UX Mockup Kit</div>
+    <h1>CropMate<br><em>AI</em></h1>
+    <p class="sub">Nhật ký mùa vụ thông minh &amp; trợ lý canh tác cho nông hộ Việt Nam.</p>
+    <div class="meta">
+      <span class="chip chip--accent">4 vai trò</span>
+      <span class="chip">21 màn hình</span>
+      <span class="chip">3 trải nghiệm AI</span>
+      <span class="chip">Responsive</span>
+    </div>
+  </div>
+  <div class="side">
+    <div class="board">
+      <div class="board-top">
+        <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></div>
+        <div><b>CropMate AI</b><small>Một nền tảng — bốn vai trò</small></div>
+      </div>
+      <div class="role-grid">
+        <div class="role"><b><span class="dot" style="background:#2e7d32"></span>Nông dân</b><small>Nhật ký, ảnh hiện trường, yêu cầu hỗ trợ</small></div>
+        <div class="role"><b><span class="dot" style="background:#0277bd"></span>Chuyên gia</b><small>Hàng đợi, tư vấn có bối cảnh</small></div>
+        <div class="role"><b><span class="dot" style="background:#b26a00"></span>Điều phối HTX</b><small>Nông hộ, lịch, báo cáo mùa vụ</small></div>
+        <div class="role"><b><span class="dot" style="background:#6a1b9a"></span>Quản trị viên</b><small>Cây trồng, tài khoản, hệ thống</small></div>
+      </div>
+      <div class="ai-card"><b>AI-1 · AI-2 · AI-3</b><p>Phân loại vấn đề, tạo checklist theo giai đoạn, tóm tắt mùa vụ — luôn có giải thích và quyền quyết định cho người dùng.</p>
+        <div class="bars"><i style="height:38%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:82%"></i><i style="height:58%"></i><i style="height:72%"></i><i style="height:44%"></i><i style="height:90%"></i></div>
+      </div>
+    </div>
+    <div class="stamp">FIGMA READY</div>
+  </div>
+  <div class="footer">
+    <div>Nhóm 2 · 67KTPM1 · 2026<br>Thiết kế giao diện &amp; luồng tương tác</div>
+    <div class="palette">
+      <i style="background:#1b5e20"></i><i style="background:#2e7d32"></i><i style="background:#a5d6a7"></i><i style="background:#ffd166"></i><i style="background:#f4f7f4"></i>
+    </div>
+  </div>
+</div>
+</body>
+</html>

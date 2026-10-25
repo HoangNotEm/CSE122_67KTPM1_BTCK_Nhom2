@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropMate AI – Design System</title>
+<link rel="stylesheet" href="../../css/style.css">
+<style>
+  body { background: #f4f7f4; padding: 40px 48px 36px; font-family: "Segoe UI", system-ui, sans-serif; }
+  .sg { max-width: 1344px; margin: 0 auto; }
+  .sg-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #22332a; padding-bottom: 18px; }
+  .sg-kicker { font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #2e7d32; }
+  .sg-head h1 { font-size: 40px; line-height: 1.1; margin: 8px 0 4px; letter-spacing: -1px; color: #1b3324; }
+  .sg-head p { color: #52655a; font-size: 14px; margin: 0; }
+  .sg-meta { text-align: right; font-size: 12px; color: #52655a; line-height: 1.8; }
+  .sg-meta b { color: #22332a; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-top: 22px; }
+  .box { background: #fff; border: 1px solid #dfe7df; border-radius: 16px; padding: 18px 20px; }
+  .box h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: #52655a; margin: 0 0 14px; }
+  .swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .sw { border-radius: 10px; overflow: hidden; border: 1px solid #e3ebe4; }
+  .sw i { display: block; height: 42px; }
+  .sw span { display: block; padding: 6px 8px; font-size: 10.5px; color: #52655a; background: #fff; }
+  .sw b { display: block; font-size: 11px; color: #22332a; }
+  .sem { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+  .sem div { border-radius: 8px; padding: 8px 6px; font-size: 9.5px; font-weight: 700; text-align: center; }
+  .type-row { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px dashed #e3ebe4; padding: 7px 0; }
+  .type-row small { color: #85998d; font-size: 10px; white-space: nowrap; }
+  .comp-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .comp-label { font-size: 10px; font-weight: 700; color: #85998d; text-transform: uppercase; letter-spacing: .08em; width: 100%; margin-top: 4px; }
+  .tokens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .token { background: #f8faf8; border: 1px solid #e3ebe4; border-radius: 8px; padding: 8px 10px; font-size: 11px; color: #52655a; }
+  .token b { display: block; color: #22332a; font-size: 11.5px; }
+  .ai-mini { background: #f1f8f2; border: 1px solid #c8e6c9; border-radius: 12px; padding: 12px; }
+  .ai-mini .tagline { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; color: #1b5e20; }
+  .ai-mini .tagline span { width: 22px; height: 22px; border-radius: 6px; background: #2e7d32; color: #fff; display: grid; place-items: center; }
+  .ai-mini p { font-size: 11.5px; color: #52655a; line-height: 1.5; margin: 8px 0; }
+  .flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .flow span { background: #fff; border: 1px solid #dfe7df; border-radius: 999px; padding: 5px 10px; font-size: 10.5px; color: #22332a; font-weight: 600; }
+  .flow i { color: #85998d; font-style: normal; font-size: 12px; }
+  .foot { display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px solid #dfe7df; color: #85998d; font-size: 11px; }
+  .note { font-size: 11px; color: #52655a; line-height: 1.6; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<div class="sg">
+  <div class="sg-head">
+    <div>
+      <div class="sg-kicker">CropMate AI · Design System</div>
+      <h1>Ngôn ngữ thiết kế &amp; thành phần giao diện</h1>
+      <p>Bảng token, typography và component dùng thống nhất trên 21 màn hình.</p>
+    </div>
+    <div class="sg-meta"><b>CSE122 · BTL-04</b><br>Nhóm 2 · 67KTPM1<br>Phiên bản 1.0 · 2026</div>
+  </div>
+
+  <div class="cols">
+    <div class="box">
+      <h2>01 · Bảng màu thương hiệu</h2>
+      <div class="swatches">
+        <div class="sw"><i style="background:#1b5e20"></i><span><b>Green 900</b>#1B5E20</span></div>
+        <div class="sw"><i style="background:#2e7d32"></i><span><b>Green 800</b>#2E7D32</span></div>
+        <div class="sw"><i style="background:#a5d6a7"></i><span><b>Green 200</b>#A5D6A7</span></div>
+        <div class="sw"><i style="background:#ffd166"></i><span><b>Accent</b>#FFD166</span></div>
+        <div class="sw"><i style="background:#f4f7f4"></i><span><b>Background</b>#F4F7F4</span></div>
+        <div class="sw"><i style="background:#22332a"></i><span><b>Text</b>#22332A</span></div>
+      </div>
+      <div class="sem">
+        <div style="background:#e8f5e9;color:#2e7d32">Success</div>
+        <div style="background:#fff4dd;color:#b26a00">Warning</div>
+        <div style="background:#fdecea;color:#c62828">Danger</div>
+        <div style="background:#e3f2fd;color:#0277bd">Info</div>
+        <div style="background:#eceff1;color:#607d8b">Neutral</div>
+      </div>
+      <p class="note">Màu xanh lá chủ đạo gợi nông nghiệp; vàng accent dùng cho CTA AI và điểm nhấn. Mọi cặp màu chữ/nền đạt tương phản tối thiểu 4.5:1.</p>
+    </div>
+
+    <div class="box">
+      <h2>02 · Typography</h2>
+      <div class="type-row"><span style="font-size:26px;font-weight:800;letter-spacing:-.5px">CropMate AI</span><small>H1 · 32/800</small></div>
+      <div class="type-row"><span style="font-size:18px;font-weight:700">Tổng quan mùa vụ</span><small>H2 · 20/700</small></div>
+      <div class="type-row"><span style="font-size:15px;font-weight:600">Nhật ký đồng ruộng</span><small>H3 · 15/600</small></div>
+      <div class="type-row"><span style="font-size:13.5px">Theo dõi tiến độ và nhận gợi ý công việc từ AI.</span><small>Body · 14/400</small></div>
+      <div class="type-row"><span style="font-size:12px;color:#52655a">Cập nhật 2 giờ trước · Ảnh hiện trường</span><small>Small · 12/400</small></div>
+      <div class="type-row"><span style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#2e7d32">NHÃN PHỤ · UPPERCASE</span><small>Label · 10/800</small></div>
+      <p class="note">Font hệ thống Segoe UI / Inter fallback — không tải font ngoài, đảm bảo chạy offline. Line-height 1.5 cho nội dung đọc dài.</p>
+    </div>
+
+    <div class="box">
+      <h2>03 · Component cơ bản</h2>
+      <div class="comp-label">Button</div>
+      <div class="comp-row">
+        <button class="btn btn--primary btn--sm">Tạo checklist AI</button>
+        <button class="btn btn--secondary btn--sm">Sửa</button>
+        <button class="btn btn--danger-soft btn--sm">Từ chối</button>
+        <button class="btn btn--ghost btn--sm" disabled>Đã khóa</button>
+      </div>
+      <div class="comp-label">Badge trạng thái</div>
+      <div class="comp-row">
+        <span class="badge badge--warning">Đang chờ</span>
+        <span class="badge badge--info">Đang xử lý</span>
+        <span class="badge badge--success">Đã tư vấn</span>
+        <span class="badge badge--danger">Ưu tiên cao</span>
+        <span class="badge badge--neutral">Đã hủy</span>
+      </div>
+      <div class="comp-label">Form &amp; validation</div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field__label">Mô tả triệu chứng <span class="req">*</span></label>
+        <input class="input" value="Đốm nâu lan nhanh trên lá lúa" aria-invalid="true">
+        <div class="field__error" style="display:block">Cần ít nhất 20 ký tự để hệ thống hiểu rõ vấn đề.</div>
+      </div>
+      <div class="comp-label">Card</div>
+      <div style="border:1px solid #dfe7df;border-radius:12px;padding:10px 12px;background:#fff">
+        <div style="font-size:12px;font-weight:700">Ruộng Bắc · Mảnh 12</div>
+        <div style="font-size:11px;color:#52655a;margin-top:3px">Lúa IR 50404 · Trổ - chín · 72%</div>
+        <div style="height:6px;background:#e8f5e9;border-radius:99px;margin-top:8px;overflow:hidden"><i style="display:block;width:72%;height:100%;background:#2e7d32"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1.1fr .9fr 1fr;margin-top:18px">
+    <div class="box">
+      <h2>04 · Trải nghiệm AI (mẫu kết quả)</h2>
+      <div class="ai-mini">
+        <div class="tagline"><span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span> Checklist giai đoạn “Trổ - chín”</div>
+        <p><b>Phun phòng đạo ôn cổ bông</b> — bảo vệ cổ bông quyết định năng suất.<br><b>Ngừng bón đạm, giảm nước dần</b> — tránh lá đỏ, rầy bùng phát cuối vụ.</p>
+        <div class="comp-row" style="margin-bottom:0">
+          <button class="btn btn--primary btn--sm">Chấp nhận &amp; lưu</button>
+          <button class="btn btn--secondary btn--sm">Sửa</button>
+          <button class="btn btn--ghost btn--sm">Từ chối</button>
+        </div>
+      </div>
+      <div class="flow"><span>Nhập</span><i>→</i><span>Đang xử lý</span><i>→</i><span>Kết quả + lý do</span><i>→</i><span>Chấp nhận/Sửa/Từ chối</span></div>
+      <p class="note">Mọi kết quả AI đều có nhãn “mô phỏng”, độ tin cậy, phần giải thích và nút thất bại (Thử lại / Dùng thủ công).</p>
+    </div>
+
+    <div class="box">
+      <h2>05 · Spacing · Radius · Elevation</h2>
+      <div class="tokens">
+        <div class="token"><b>4 / 8 / 12 / 16</b>khoảng cách cơ bản</div>
+        <div class="token"><b>24 / 32</b>khoảng cách khối</div>
+        <div class="token"><b>Radius 8</b>input, badge</div>
+        <div class="token"><b>Radius 12–16</b>card, modal</div>
+        <div class="token"><b>Shadow 1</b>card nghỉ</div>
+        <div class="token"><b>Shadow 2</b>dropdown, modal</div>
+      </div>
+      <p class="note">Lưới nội dung tối đa 1280px, sidebar 248px, topbar 64px. Mobile: sidebar thành drawer, KPI xếp 2 cột.</p>
+    </div>
+
+    <div class="box">
+      <h2>06 · Accessibility &amp; trạng thái</h2>
+      <p class="note" style="margin-top:0"><b>Bắt buộc:</b> label cho mọi input; alt cho ảnh hiện trường; aria-live cho toast/kết quả AI; focus ring rõ ràng; không dùng màu làm tín hiệu duy nhất.</p>
+      <div class="comp-row" style="margin-top:10px">
+        <span class="badge badge--success">Thành công</span>
+        <span class="badge badge--warning">Đang tải</span>
+        <span class="badge badge--danger">Lỗi + thử lại</span>
+        <span class="badge badge--neutral">Rỗng</span>
+      </div>
+      <p class="note">Mỗi màn hình phải có tối thiểu: trạng thái đang tải (skeleton), rỗng, lỗi có nút thử lại; form có validation; hành động nguy hiểm có xác nhận.</p>
+      <p class="note"><b>Breakpoint:</b> 1200 / 992 / 768 / 480px. Kiểm tra 1440, 1024, 390.</p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>CropMate AI · Design System v1.0 · Nguồn: css/style.css</span>
+    <span>Mockup kit cho Figma · 2026</span>
+  </div>
+</div>
+</body>
+</html>

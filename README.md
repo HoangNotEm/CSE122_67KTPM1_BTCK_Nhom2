@@ -18,7 +18,7 @@ project-root/
 ├── README.md
 ├── index.html              ← landing page
 ├── docs/                   ← tài liệu nhóm (đề xuất, kiểm kê màn hình, phân công, Trello…)
-├── design/                 ← figma-link.txt + mockups/
+├── design/                 ← figma-link.txt + figma/ (30 ảnh mockup + hướng dẫn)
 ├── pages/                  ← 20 màn hình còn lại (login, register, farmer-*, expert-*, coordinator-*, admin-*, 403, 404…)
 ├── assets/
 │   ├── images/             ← ảnh minh hoạ (nếu có)
@@ -78,6 +78,13 @@ Mỗi tính năng đi đủ chu trình **Nhập → Kiểm tra hợp lệ → Đ
 | AI-1 | Field Issue Classifier – phân loại vấn đề từ mô tả triệu chứng | `pages/farmer-help-request.html` |
 | AI-2 | Season Checklist Generator – checklist công việc theo cây trồng/giai đoạn | `pages/farmer-season-dashboard.html` |
 | AI-3 | Farm Log Summarizer – tóm tắt diễn biến mùa vụ cho chuyên gia | `pages/expert-request-detail.html` |
+
+## Mockup UI/UX (Figma-ready)
+Bộ ảnh dựng sẵn để nhập Figma nằm trong [`design/figma/screens/`](design/figma/screens): **30 ảnh PNG** xuất từ chính giao diện đã code, gồm bìa + design system, đủ **21/21 màn hình**, **3 trạng thái AI thành công**, **3 trạng thái AI lỗi** và **2 màn hình mobile 390px**.
+
+- Hướng dẫn import từng bước (10–15 phút): [`design/figma/README.md`](design/figma/README.md)
+- Link Figma của nhóm dán vào [`design/figma-link.txt`](design/figma-link.txt) sau khi import.
+- Ảnh dùng đúng tỉ lệ 1x (desktop 1440px, mobile 390px), không cần chỉnh kích thước khi đặt vào frame.
 
 ## Công nghệ & kiến trúc
 - HTML5 ngữ nghĩa + CSS thuần (design system token trong `css/style.css`, responsive trong `css/responsive.css`), **không framework ngoài** — chạy offline qua `file://`.

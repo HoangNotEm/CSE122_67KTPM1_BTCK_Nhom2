@@ -10,7 +10,7 @@
 |---|---|---|---|
 | TASK-01 | Khung dây + mockup Figma/Canva trang đầu tiên (farmer dashboard) | Cả nhóm | `docs/wireframes` |
 | TASK-02 | Hoàn thiện bảng kiểm kê màn hình + luồng người dùng, nộp giảng viên duyệt | Cả nhóm | `docs/screen-list` |
-| TASK-03 | Mockup desktop + bản responsive chính + trạng thái loading/empty/error + mockup tương tác AI | SV1 (lead), cả nhóm review | `design/mockups` |
+| TASK-03 | Mockup desktop + bản responsive chính + trạng thái loading/empty/error + mockup tương tác AI | SV1 (lead), cả nhóm review | `design/figma` |
 
 ## Tuần 2 – Khung dự án
 | Mã | Task | Người | Nhánh gợi ý |
