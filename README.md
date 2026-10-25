@@ -82,10 +82,10 @@ Mỗi tính năng đi đủ chu trình **Nhập → Kiểm tra hợp lệ → Đ
 ## Mockup UI/UX (Figma)
 Bộ mockup **30 ảnh** đã đưa lên Figma, chia 3 page (link công khai, không cần đăng nhập):
 
-- [File mockup UI/UX](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled)
-- [Page 00 – Bìa & Design System](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=0-1)
-- [Page 01 – Desktop (21 màn hình)](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=1-3269)
-- [Page 02 – AI states & Mobile](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/Untitled?node-id=1-3270)
+- [File mockup UI/UX](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup)
+- [Page 00 – Bìa & Design System](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=0-1)
+- [Page 01 – Desktop (21 màn hình)](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=1-3269)
+- [Page 02 – AI states & Mobile](https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=1-3270)
 
 Ảnh gốc 1x (desktop 1440px, mobile 390px) vẫn nằm trong [`design/figma/screens/`](design/figma/screens); danh sách link lưu tại [`design/figma-link.txt`](design/figma-link.txt).
 
