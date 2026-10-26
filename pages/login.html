@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
       const data = ui.serializeForm(form);
       CM.api.login(data.email, role);
-      ui.toast('Đăng nhập thành công!', 'success');
+      ui.toast('Chào mừng bạn quay trở lại CropMate AI!', 'success');
       go(role);
     }, 600);
   });
