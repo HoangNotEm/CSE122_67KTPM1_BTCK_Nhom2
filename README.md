@@ -62,12 +62,12 @@ Bảng đầy đủ 12 cột (mục tiêu, nhiệm vụ, CRUD, trạng thái, AI
 | # | Tệp | Vai trò | AI | Task ID | Video OBS |
 |---:|---|---|---|---|---|
 | 1 | `index.html` | Dùng chung | – | TASK-08 | `SV3-01-index.mp4` |
-| 2 | `pages/login.html` | Dùng chung | – | TASK-08 | `SV1-01-login.mp4` |
-| 3 | `pages/register.html` | Dùng chung | – | TASK-08 | `SV1-02-register.mp4` |
+| 2 | `pages/login.html` | Dùng chung | – | TASK-08 | [SV1-01-login.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-01-login.mp4) |
+| 3 | `pages/register.html` | Dùng chung | – | TASK-08 | [SV1-02-register.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-02-register.mp4) |
 | 4 | `pages/forgot-password.html` | Dùng chung | – | TASK-08 | `SV2-04-forgot-password.mp4` |
 | 5 | `pages/profile.html` | Dùng chung | – | TASK-22 | `SV2-05-profile.mp4` |
 | 6 | `pages/settings.html` | Dùng chung | – | TASK-22 | `SV2-06-settings.mp4` |
-| 7 | `pages/notifications.html` | Dùng chung | – | TASK-22 | `SV1-03-notifications.mp4` |
+| 7 | `pages/notifications.html` | Dùng chung | – | TASK-22 | [SV1-03-notification.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-03-notification.mp4) |
 | 8 | `pages/403.html` | Dùng chung | – | TASK-22 | `SV3-02-403.mp4` |
 | 9 | `pages/404.html` | Dùng chung | – | TASK-22 | `SV3-03-404.mp4` |
 | 10 | `pages/farmer-season-dashboard.html` | Nông dân | **AI-2** Checklist Generator | TASK-05 | `SV1-04-farmer-season-dashboard.mp4` |
