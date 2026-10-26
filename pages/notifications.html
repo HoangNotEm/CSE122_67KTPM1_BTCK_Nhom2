@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông báo – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="*" data-page="notifications.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Thông báo</h1>
+      <p>Các cập nhật về yêu cầu hỗ trợ, lịch HTX và gợi ý từ AI dành cho bạn.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--secondary" id="btn-read-all">Đánh dấu đã đọc tất cả</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="segmented" id="type-filter" role="group" aria-label="Lọc theo loại thông báo">
+      <button type="button" class="segmented__btn is-active" data-type="all">Tất cả</button>
+      <button type="button" class="segmented__btn" data-type="helpRequest">Yêu cầu hỗ trợ</button>
+      <button type="button" class="segmented__btn" data-type="event">Lịch HTX</button>
+      <button type="button" class="segmented__btn" data-type="ai">AI</button>
+      <button type="button" class="segmented__btn" data-type="system">Hệ thống</button>
+    </div>
+    <label class="checkbox" style="margin-left:auto"><input type="checkbox" id="unread-only"> Chỉ hiện chưa đọc</label>
+    <span class="filter-bar__count" id="notif-count"></span>
+  </div>
+
+  <section aria-label="Danh sách thông báo">
+    <div id="notif-list">
+      <div class="skeleton skeleton--card"></div>
+      <div class="skeleton skeleton--card"></div>
+      <div class="skeleton skeleton--card"></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  const TYPE_META = {
+    helpRequest: { icon: 'inbox',     label: 'Yêu cầu hỗ trợ', cls: '' },
+    event:       { icon: 'calendar',  label: 'Lịch HTX',       cls: 'stat__icon--amber' },
+    ai:          { icon: 'leaf',      label: 'AI',             cls: 'stat__icon--blue' },
+    system:      { icon: 'settings',  label: 'Hệ thống',       cls: 'stat__icon--red' }
+  };
+
+  let items = [];
+  let typeFilter = 'all';
+  let unreadOnly = false;
+  const listEl = document.getElementById('notif-list');
+
+  /* ---------- Tải dữ liệu ---------- */
+  async function load() {
+    listEl.innerHTML = ui.skeletonList(3);
+    try {
+      items = (await api.list('notifications'))
+        .filter(function (n) { return n.userId === me.id; })
+        .sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      render();
+    } catch (e) {
+      listEl.innerHTML = '<div class="card">' + ui.errorState(e.message) + '</div>';
+      listEl.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', load); });
+    }
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    const filtered = items.filter(function (n) {
+      if (typeFilter !== 'all' && n.type !== typeFilter) return false;
+      if (unreadOnly && n.read) return false;
+      return true;
+    });
+    const unread = items.filter(function (n) { return !n.read; }).length;
+
+    document.getElementById('notif-count').textContent = items.length
+      ? (unread ? unread + ' chưa đọc / ' + items.length + ' thông báo' : items.length + ' thông báo')
+      : '';
+    document.getElementById('btn-read-all').disabled = !unread;
+
+    if (!filtered.length) {
+      listEl.innerHTML = ui.emptyState({
+        icon: 'bell',
+        title: items.length ? 'Không có thông báo phù hợp bộ lọc' : 'Không có thông báo',
+        desc: items.length ? 'Thử chọn loại khác hoặc tắt bộ lọc "chỉ hiện chưa đọc".' : 'Các cập nhật mới nhất sẽ xuất hiện tại đây.'
+      });
+      return;
+    }
+
+    listEl.innerHTML = '<div class="stack">' + filtered.map(function (n) {
+      const meta = TYPE_META[n.type] || TYPE_META.system;
+      return '<article class="card" data-id="' + n.id + '" tabindex="0" role="button"' +
+        ' aria-label="' + ui.escapeHtml(n.title) + '"' +
+        ' style="cursor:pointer;' + (n.read ? '' : 'border-left:3px solid var(--green-700);') + '">' +
+        '<div class="row" style="align-items:flex-start;flex-wrap:nowrap;gap:12px">' +
+          '<span class="stat__icon ' + meta.cls + '" style="width:40px;height:40px">' + ui.icon(meta.icon, 'style="width:19px;height:19px"') + '</span>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="row row--between" style="gap:8px">' +
+              '<strong>' + ui.escapeHtml(n.title) +
+                (n.read ? '' : ' <span title="Chưa đọc" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--info);margin-left:2px"></span>') +
+              '</strong>' +
+              '<span class="small muted" style="white-space:nowrap">' + ui.fmtDate(n.createdAt) + '</span>' +
+            '</div>' +
+            '<p class="small muted" style="margin:4px 0 0">' + ui.escapeHtml(n.body) + '</p>' +
+            '<div class="row" style="margin-top:10px">' +
+              '<span class="tag">' + meta.label + '</span>' +
+              '<span style="flex:1"></span>' +
+              (n.read ? '' : '<button type="button" class="btn btn--ghost btn--sm" data-act="read">' + ui.icon('check') + ' Đã đọc</button>') +
+              '<button type="button" class="btn btn--danger-soft btn--sm" data-act="del">' + ui.icon('trash') + ' Xóa</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('') + '</div>';
+
+    /* Gắn sự kiện cho từng thẻ */
+    listEl.querySelectorAll('.card[data-id]').forEach(function (card) {
+      const id = card.getAttribute('data-id');
+      function onOpen() {
+        markRead(id);
+      }
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('button')) return;
+        onOpen();
+      });
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); }
+      });
+      const rd = card.querySelector('[data-act="read"]');
+      if (rd) rd.addEventListener('click', function () { markRead(id); });
+      card.querySelector('[data-act="del"]').addEventListener('click', async function () {
+        const ok = await ui.confirmModal({
+          title: 'Xóa thông báo',
+          message: 'Bạn chắc chắn muốn xóa thông báo này?',
+          okText: 'Xóa',
+          danger: true
+        });
+        if (!ok) return;
+        try {
+          await api.remove('notifications', id);
+          items = items.filter(function (n) { return n.id !== id; });
+          render();
+          ui.toast('Đã xóa thông báo.', 'success');
+        } catch (err) {
+          ui.toast('Không xóa được: ' + ui.escapeHtml(err.message), 'error');
+        }
+      });
+    });
+  }
+
+  /* ---------- Đánh dấu đã đọc 1 thông báo ---------- */
+  async function markRead(id) {
+    const n = items.find(function (x) { return x.id === id; });
+    if (!n || n.read) return;
+    n.read = true;          /* cập nhật giao diện ngay */
+    render();
+    try {
+      await api.update('notifications', id, { read: true });
+    } catch (e) {
+      n.read = false;
+      render();
+      ui.toast('Không cập nhật được trạng thái đã đọc.', 'error');
+    }
+  }
+
+  /* ---------- Đánh dấu đã đọc tất cả ---------- */
+  document.getElementById('btn-read-all').addEventListener('click', async function () {
+    const unread = items.filter(function (n) { return !n.read; });
+    if (!unread.length) return;
+    unread.forEach(function (n) { n.read = true; });
+    render();
+    try {
+      await Promise.all(unread.map(function (n) { return api.update('notifications', n.id, { read: true }); }));
+      ui.toast('Đã đánh dấu đọc tất cả thông báo.', 'success');
+    } catch (e) {
+      ui.toast('Có lỗi khi cập nhật, đang tải lại danh sách...', 'error');
+      load();
+    }
+  });
+
+  /* ---------- Bộ lọc ---------- */
+  document.querySelectorAll('#type-filter .segmented__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('#type-filter .segmented__btn').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      typeFilter = btn.getAttribute('data-type');
+      render();
+    });
+  });
+  document.getElementById('unread-only').addEventListener('change', function () {
+    unreadOnly = this.checked;
+    render();
+  });
+
+  load();
+});
+</script>
+</body>
+</html>

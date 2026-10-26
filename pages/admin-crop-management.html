@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý danh mục cây trồng – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="admin" data-page="admin-crop-management.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Quản lý danh mục cây trồng</h1>
+      <p>Thêm, chỉnh sửa và lưu trữ các loại cây trồng dùng chung trên nền tảng.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-add-crop"><span id="btn-add-crop-icon"></span> Thêm cây trồng</button>
+    </div>
+  </div>
+
+  <!-- Bộ lọc -->
+  <div class="filter-bar">
+    <div class="filter-bar__search" id="search-wrap">
+      <input class="input" type="search" id="f-search" placeholder="Tìm theo tên hoặc danh mục cây trồng..." aria-label="Tìm kiếm cây trồng">
+    </div>
+    <select class="select" id="f-status" aria-label="Lọc theo trạng thái">
+      <option value="">Tất cả trạng thái</option>
+      <option value="active">Hoạt động</option>
+      <option value="archived">Đã lưu trữ</option>
+    </select>
+    <span class="filter-bar__count" id="f-count">Đang tải...</span>
+  </div>
+
+  <!-- Bảng danh mục -->
+  <section class="card card--pad-0" aria-labelledby="crops-title">
+    <h2 id="crops-title" class="sr-only" style="position:absolute;left:-9999px;">Danh sách cây trồng</h2>
+    <div id="crop-table">
+      <div class="card__body">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+        <div class="skeleton skeleton--line w-80"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  const state = { crops: [], seasons: [], q: '', status: '' };
+
+  /* ---------- Nạp dữ liệu ---------- */
+  async function loadData() {
+    const box = document.getElementById('crop-table');
+    box.innerHTML = '<div class="card__body">' +
+      '<div class="skeleton skeleton--line w-80"></div><div class="skeleton skeleton--line w-60"></div>' +
+      '<div class="skeleton skeleton--line w-40"></div><div class="skeleton skeleton--line w-80"></div></div>';
+    try {
+      state.crops = await api.list('crops');
+      state.seasons = api.read('seasons');
+      render();
+    } catch (e) {
+      box.innerHTML = '<div class="card__body">' + ui.errorState(e.message) + '</div>';
+      document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', loadData); });
+    }
+  }
+
+  function seasonCount(cropId) {
+    return state.seasons.filter(function (s) { return s.cropId === cropId; }).length;
+  }
+
+  /* ---------- Render bảng ---------- */
+  function render() {
+    const box = document.getElementById('crop-table');
+    const q = state.q.toLowerCase();
+    const rows = state.crops.filter(function (c) {
+      if (state.status && c.status !== state.status) return false;
+      if (q && (c.name || '').toLowerCase().indexOf(q) < 0 && (c.category || '').toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+
+    document.getElementById('f-count').textContent = rows.length + ' / ' + state.crops.length + ' cây trồng';
+
+    if (!rows.length) {
+      box.innerHTML = state.crops.length
+        ? ui.emptyState({
+            icon: 'search', title: 'Không tìm thấy cây trồng',
+            desc: 'Thử đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái.',
+            action: '<button type="button" class="btn btn--secondary" data-action="clear-filter">' + ui.icon('refresh') + ' Xóa bộ lọc</button>'
+          })
+        : ui.emptyState({
+            icon: 'leaf', title: 'Chưa có cây trồng nào',
+            desc: 'Thêm cây trồng đầu tiên vào danh mục để nông dân và chuyên gia cùng sử dụng.',
+            action: '<button type="button" class="btn btn--primary" data-action="add">' + ui.icon('plus') + ' Thêm cây trồng</button>'
+          });
+      return;
+    }
+
+    box.innerHTML = '<div class="table-wrap"><table class="table">' +
+      '<thead><tr><th>Tên cây trồng</th><th>Giai đoạn sinh trưởng</th><th>Số giai đoạn</th><th>Mùa vụ đang dùng</th><th>Trạng thái</th><th>Hành động</th></tr></thead>' +
+      '<tbody>' + rows.map(function (c) {
+        const stages = (c.growthStages || []);
+        const full = stages.join(' → ');
+        const short = full.length > 64 ? full.slice(0, 64) + '…' : full;
+        const used = seasonCount(c.id);
+        let actions = '<button type="button" class="btn btn--ghost btn--sm" data-action="edit" data-id="' + c.id + '">' + ui.icon('edit') + ' Sửa</button>';
+        if (c.status === 'active') {
+          actions += ' <button type="button" class="btn btn--ghost btn--sm" data-action="archive" data-id="' + c.id + '">' + ui.icon('archive') + ' Lưu trữ</button>';
+        } else {
+          actions += ' <button type="button" class="btn btn--ghost btn--sm" data-action="restore" data-id="' + c.id + '">' + ui.icon('refresh') + ' Kích hoạt lại</button>' +
+                     ' <button type="button" class="btn btn--danger-soft btn--sm" data-action="delete" data-id="' + c.id + '">' + ui.icon('trash') + ' Xóa</button>';
+        }
+        return '<tr>' +
+          '<td><span class="table-card-label">Tên cây trồng</span><span class="cell-main">' + ui.escapeHtml(c.name) + '</span> <span class="tag">' + ui.escapeHtml(c.category) + '</span></td>' +
+          '<td><span class="table-card-label">Giai đoạn sinh trưởng</span><span class="small" title="' + ui.escapeHtml(full) + '">' + ui.escapeHtml(short) + '</span></td>' +
+          '<td><span class="table-card-label">Số giai đoạn</span>' + stages.length + ' giai đoạn</td>' +
+          '<td><span class="table-card-label">Mùa vụ đang dùng</span>' + used + '</td>' +
+          '<td><span class="table-card-label">Trạng thái</span>' + ui.badge(c.status) + '</td>' +
+          '<td><span class="table-card-label">Hành động</span><div class="table__actions">' + actions + '</div></td>' +
+          '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  /* ---------- Hành động ---------- */
+  document.getElementById('crop-table').addEventListener('click', async function (e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    if (action === 'add') { openCropModal(null); return; }
+    if (action === 'clear-filter') {
+      /* Đưa bộ lọc về mặc định để người dùng thoát khỏi trạng thái không có kết quả */
+      state.q = ''; state.status = '';
+      document.getElementById('f-search').value = '';
+      document.getElementById('f-status').value = '';
+      render();
+      document.getElementById('f-search').focus();
+      return;
+    }
+    const id = btn.getAttribute('data-id');
+    const crop = state.crops.find(function (c) { return c.id === id; });
+    if (!crop) return;
+
+    if (action === 'edit') { openCropModal(crop); return; }
+
+    if (action === 'archive') {
+      const ok = await ui.confirmModal({
+        title: 'Lưu trữ cây trồng',
+        message: 'Lưu trữ "' + ui.escapeHtml(crop.name) + '"? Cây trồng sẽ không còn xuất hiện trong các danh sách chọn mới.',
+        okText: 'Lưu trữ'
+      });
+      if (!ok) return;
+      try {
+        await api.update('crops', id, { status: 'archived' });
+        ui.toast('Đã lưu trữ "' + ui.escapeHtml(crop.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+      return;
+    }
+
+    if (action === 'restore') {
+      try {
+        await api.update('crops', id, { status: 'active' });
+        ui.toast('Đã kích hoạt lại "' + ui.escapeHtml(crop.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+      return;
+    }
+
+    if (action === 'delete') {
+      if (seasonCount(id) > 0) {
+        ui.toast('Không thể xóa cây trồng đang được sử dụng (' + seasonCount(id) + ' mùa vụ).', 'warning');
+        return;
+      }
+      const ok = await ui.confirmModal({
+        title: 'Xóa cây trồng',
+        message: 'Xóa vĩnh viễn "' + ui.escapeHtml(crop.name) + '" khỏi danh mục? Hành động này không thể hoàn tác.',
+        okText: 'Xóa', danger: true
+      });
+      if (!ok) return;
+      try {
+        await api.remove('crops', id);
+        ui.toast('Đã xóa "' + ui.escapeHtml(crop.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+    }
+  });
+
+  /* ---------- Modal tạo / sửa ---------- */
+  const CATEGORIES = ['Cây lương thực', 'Cây ăn trái', 'Cây rau màu', 'Khác'];
+
+  function openCropModal(crop) {
+    const isEdit = !!crop;
+    const categories = CATEGORIES.map(function (cat) {
+      const sel = crop && crop.category === cat ? ' selected' : '';
+      return '<option value="' + cat + '"' + sel + '>' + cat + '</option>';
+    }).join('');
+    const statusField = isEdit
+      ? '<div class="field">' +
+        '<label class="field__label" for="cf-status">Trạng thái</label>' +
+        '<select class="select" id="cf-status" name="status">' +
+        '<option value="active"' + (crop.status === 'active' ? ' selected' : '') + '>Hoạt động</option>' +
+        '<option value="archived"' + (crop.status === 'archived' ? ' selected' : '') + '>Đã lưu trữ</option>' +
+        '</select><div class="field__error"></div></div>'
+      : '';
+
+    const bd = ui.openModal({
+      title: isEdit ? 'Sửa cây trồng' : 'Thêm cây trồng',
+      body:
+        '<form id="crop-form" novalidate>' +
+        '<div class="field">' +
+          '<label class="field__label" for="cf-name">Tên cây trồng <span class="req">*</span></label>' +
+          '<input class="input" id="cf-name" name="name" data-rules="required" value="' + ui.escapeHtml(crop ? crop.name : '') + '" placeholder="VD: Lúa Đông Xuân (IR 50404)">' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="cf-category">Danh mục <span class="req">*</span></label>' +
+          '<select class="select" id="cf-category" name="category" data-rules="required">' +
+            '<option value="">— Chọn danh mục —</option>' + categories +
+          '</select>' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field" id="field-stages">' +
+          '<label class="field__label" for="cf-stages">Giai đoạn sinh trưởng <span class="req">*</span></label>' +
+          '<textarea class="textarea" id="cf-stages" name="stages" data-rules="required" placeholder="Mỗi dòng một giai đoạn, ví dụ:' + '\n' + 'Làm đất' + '\n' + 'Gieo sạ' + '\n' + 'Đẻ nhánh' + '\n' + 'Thu hoạch">' + ui.escapeHtml(crop ? (crop.growthStages || []).join('\n') : '') + '</textarea>' +
+          '<div class="field__hint">Mỗi dòng là một giai đoạn, tối thiểu 2 giai đoạn không rỗng.</div>' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        statusField +
+        '</form>',
+      footer:
+        '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+        '<button type="submit" form="crop-form" class="btn btn--primary" id="cf-save">' + (isEdit ? 'Lưu thay đổi' : 'Thêm cây trồng') + '</button>'
+    });
+
+    const form = bd.querySelector('#crop-form');
+    ui.bindLiveValidation(form);
+
+    /* Validate riêng số dòng giai đoạn */
+    const stagesEl = bd.querySelector('#cf-stages');
+    stagesEl.addEventListener('input', function () {
+      const f = stagesEl.closest('.field');
+      f.classList.remove('has-error');
+      f.querySelector('.field__error').textContent = '';
+    });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      const lines = stagesEl.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      if (lines.length < 2) {
+        const f = stagesEl.closest('.field');
+        f.classList.add('has-error');
+        f.querySelector('.field__error').textContent = 'Cần tối thiểu 2 giai đoạn không rỗng (mỗi giai đoạn một dòng).';
+        stagesEl.focus();
+        return;
+      }
+      const data = ui.serializeForm(form);
+      const saveBtn = bd.querySelector('#cf-save');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        if (isEdit) {
+          const patch = { name: data.name.trim(), category: data.category, growthStages: lines };
+          if (data.status) patch.status = data.status;
+          await api.update('crops', crop.id, patch);
+          ui.toast('Đã cập nhật cây trồng "' + ui.escapeHtml(data.name.trim()) + '".', 'success');
+        } else {
+          await api.create('crops', { name: data.name.trim(), category: data.category, growthStages: lines, status: 'active' });
+          ui.toast('Đã thêm cây trồng "' + ui.escapeHtml(data.name.trim()) + '".', 'success');
+        }
+        ui.closeModal();
+        loadData();
+      } catch (err) {
+        ui.toast(err.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = isEdit ? 'Lưu thay đổi' : 'Thêm cây trồng';
+      }
+    });
+  }
+
+  /* ---------- Bộ lọc ---------- */
+  document.getElementById('search-wrap').insertAdjacentHTML('afterbegin', ui.icon('search'));
+  document.getElementById('f-search').addEventListener('input', ui.debounce(function () {
+    state.q = this.value.trim();
+    render();
+  }, 250));
+  document.getElementById('f-status').addEventListener('change', function () {
+    state.status = this.value;
+    render();
+  });
+
+  /* Boot */
+  document.getElementById('btn-add-crop-icon').innerHTML = ui.icon('plus');
+  document.getElementById('btn-add-crop').addEventListener('click', function () { openCropModal(null); });
+  loadData();
+});
+</script>
+</body>
+</html>

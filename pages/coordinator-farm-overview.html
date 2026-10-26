@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng quan nông hộ – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="coordinator" data-page="coordinator-farm-overview.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Tổng quan nông hộ</h1>
+      <p>Giám sát các nông hộ trong HTX Phú Hưng và hoạt động canh tác.</p>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh -->
+  <section class="grid grid--4" id="stats" aria-label="Thống kê nhanh">
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+  </section>
+
+  <div class="grid" style="grid-template-columns: 2fr 1fr; margin-top: 16px;" id="overview-cols">
+    <div>
+      <!-- Thanh lọc -->
+      <div class="filter-bar" role="search">
+        <div class="filter-bar__search">
+          <input class="input" type="search" id="f-keyword" placeholder="Tìm theo tên nông hộ, chủ hộ hoặc địa điểm..." aria-label="Tìm kiếm nông hộ">
+          <span id="f-search-icon"></span>
+        </div>
+        <select class="select" id="f-season-status" aria-label="Lọc theo trạng thái mùa vụ">
+          <option value="">Mùa vụ: Tất cả</option>
+          <option value="ongoing">Mùa vụ: Đang diễn ra</option>
+          <option value="completed">Mùa vụ: Hoàn thành</option>
+        </select>
+        <span class="filter-bar__count" id="f-count"></span>
+      </div>
+
+      <!-- Danh sách nông hộ -->
+      <section class="grid grid--2" id="farm-list" aria-label="Danh sách nông hộ">
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+        <div class="skeleton skeleton--card"></div>
+      </section>
+    </div>
+
+    <!-- Hoạt động gần đây của HTX -->
+    <section class="card" aria-labelledby="activity-title" style="align-self:start">
+      <div class="card__head"><h2 id="activity-title">Hoạt động gần đây của HTX</h2></div>
+      <div id="htx-activity">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  /* ---------- Dữ liệu nền (đọc nhanh, không giả lập độ trễ) ---------- */
+  const users = api.read('users');
+  const crops = api.read('crops');
+  const fields = api.read('fields');
+  const userById = {}; users.forEach(function (u) { userById[u.id] = u; });
+  const cropById = {}; crops.forEach(function (c) { cropById[c.id] = c; });
+  const fieldsByFarm = {}; fields.forEach(function (d) {
+    (fieldsByFarm[d.farmId] = fieldsByFarm[d.farmId] || []).push(d);
+  });
+
+  const state = { keyword: '', seasonStatus: '' };
+  let allFarms = [], allSeasons = [], allLogs = [];
+
+  document.getElementById('f-search-icon').innerHTML = ui.icon('search');
+
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Thống kê nhanh ---------- */
+  async function loadStats() {
+    const box = document.getElementById('stats');
+    try {
+      const farms = await api.list('farms');
+      const seasons = await api.list('seasons');
+      const requests = await api.list('helpRequests');
+      const totalArea = farms.reduce(function (a, f) { return a + (Number(f.area) || 0); }, 0);
+      const ongoing = seasons.filter(function (s) { return s.status === 'ongoing'; }).length;
+      const openReq = requests.filter(function (r) { return r.status === 'pending' || r.status === 'assigned'; }).length;
+      const stats = [
+        { icon: 'users', cls: '', value: farms.length, label: 'Tổng nông hộ', sub: 'thuộc HTX Phú Hưng' },
+        { icon: 'grid', cls: 'stat__icon--blue', value: totalArea.toFixed(1) + ' ha', label: 'Tổng diện tích' },
+        { icon: 'sprout', cls: 'stat__icon--amber', value: ongoing, label: 'Mùa vụ đang diễn ra' },
+        { icon: 'inbox', cls: openReq ? 'stat__icon--red' : '', value: openReq, label: 'Yêu cầu hỗ trợ đang mở', sub: openReq ? 'Cần điều phối' : '' }
+      ];
+      box.innerHTML = stats.map(function (s) {
+        return '<div class="stat"><span class="stat__icon ' + s.cls + '">' + ui.icon(s.icon) + '</span>' +
+          '<div><div class="stat__value">' + s.value + '</div><div class="stat__label">' + s.label + '</div>' +
+          (s.sub ? '<div class="small muted">' + s.sub + '</div>' : '') + '</div></div>';
+      }).join('');
+    } catch (e) {
+      box.innerHTML = '<div class="card" style="grid-column:1/-1">' + ui.errorState(e.message) + '</div>';
+      bindRetry(loadStats);
+    }
+  }
+
+  /* ---------- Danh sách nông hộ ---------- */
+  async function loadFarms() {
+    const box = document.getElementById('farm-list');
+    box.innerHTML = ui.skeletonList(4);
+    try {
+      allFarms = await api.list('farms');
+      allSeasons = await api.list('seasons');
+      allLogs = await api.list('fieldLogs');
+      if (!allFarms.length) {
+        box.className = '';
+        box.innerHTML = ui.emptyState({
+          icon: 'users', title: 'Chưa có nông hộ nào',
+          desc: 'HTX chưa có nông hộ đăng ký. Dữ liệu nông hộ sẽ xuất hiện tại đây khi nông dân tham gia.'
+        });
+        document.getElementById('f-count').textContent = '';
+        return;
+      }
+      renderFarms();
+    } catch (e) {
+      box.className = '';
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadFarms);
+    }
+  }
+
+  function seasonsOfFarm(farm) {
+    const ids = (fieldsByFarm[farm.id] || []).map(function (d) { return d.id; });
+    return allSeasons.filter(function (s) { return ids.indexOf(s.fieldId) >= 0; });
+  }
+
+  function renderFarms() {
+    const box = document.getElementById('farm-list');
+    box.className = 'grid grid--2';
+    const kw = state.keyword.trim().toLowerCase();
+    const matched = allFarms.filter(function (f) {
+      const owner = userById[f.ownerId] || {};
+      const hitKw = !kw ||
+        (f.name || '').toLowerCase().indexOf(kw) >= 0 ||
+        (owner.name || '').toLowerCase().indexOf(kw) >= 0 ||
+        (f.location || '').toLowerCase().indexOf(kw) >= 0;
+      const seasons = seasonsOfFarm(f);
+      const hitStatus = !state.seasonStatus ||
+        seasons.some(function (s) { return s.status === state.seasonStatus; });
+      return hitKw && hitStatus;
+    });
+
+    document.getElementById('f-count').textContent = matched.length + '/' + allFarms.length + ' nông hộ';
+
+    if (!matched.length) {
+      box.className = '';
+      box.innerHTML = ui.emptyState({
+        icon: 'search', title: 'Không tìm thấy nông hộ phù hợp',
+        desc: 'Thử đổi từ khóa tìm kiếm hoặc chọn lại trạng thái mùa vụ.',
+        action: '<button type="button" class="btn btn--secondary" id="btn-clear-filter">' + ui.icon('refresh') + ' Xóa bộ lọc</button>'
+      });
+      const clearBtn = document.getElementById('btn-clear-filter');
+      if (clearBtn) clearBtn.addEventListener('click', function () {
+        state.keyword = ''; state.seasonStatus = '';
+        document.getElementById('f-keyword').value = '';
+        document.getElementById('f-season-status').value = '';
+        renderFarms();
+      });
+      return;
+    }
+
+    box.innerHTML = matched.map(function (f) {
+      const owner = userById[f.ownerId] || { name: '—', phone: '—' };
+      const seasons = seasonsOfFarm(f);
+      const seasonRows = seasons.length ? seasons.map(function (s) {
+        const crop = cropById[s.cropId] || { name: '—' };
+        return '<div class="row row--between" style="padding:6px 0;border-top:1px dashed var(--border)">' +
+          '<div class="small"><strong>' + ui.escapeHtml(s.name) + '</strong><br>' +
+          '<span class="muted">' + ui.escapeHtml(crop.name) + ' · ' + ui.escapeHtml(s.stage) + '</span></div>' +
+          '<div style="min-width:110px;text-align:right">' +
+            '<div class="row" style="justify-content:flex-end;gap:6px"><div class="progress" style="width:64px"><div class="progress__bar' + (s.progress < 40 ? ' progress__bar--amber' : '') + '" style="width:' + s.progress + '%"></div></div>' +
+            '<span class="small muted">' + s.progress + '%</span></div>' +
+            '<div style="margin-top:4px">' + ui.badge(s.status) + '</div>' +
+          '</div></div>';
+      }).join('') : '<p class="small muted" style="margin:6px 0 0">Chưa có mùa vụ nào.</p>';
+
+      return '<article class="card">' +
+        '<div class="row row--between">' +
+          '<strong>' + ui.escapeHtml(f.name) + '</strong>' + ui.badge(f.status) +
+        '</div>' +
+        '<div class="small" style="margin-top:6px">Chủ hộ: <strong>' + ui.escapeHtml(owner.name) + '</strong> · ' + ui.escapeHtml(owner.phone || '—') + '</div>' +
+        '<div class="small muted" style="margin-top:4px">' + ui.icon('mapPin', 'width="14" height="14" style="vertical-align:-2px"') + ' ' + ui.escapeHtml(f.location) + '</div>' +
+        '<div class="small" style="margin-top:4px">Diện tích: <strong>' + (Number(f.area) || 0).toFixed(1) + ' ha</strong> · ' + seasons.length + ' mùa vụ</div>' +
+        '<div style="margin-top:8px">' + seasonRows + '</div>' +
+        '<div class="row" style="margin-top:12px">' +
+          '<button type="button" class="btn btn--secondary btn--sm" data-detail="' + f.id + '">' + ui.icon('eye') + ' Xem chi tiết</button>' +
+        '</div></article>';
+    }).join('');
+
+    box.querySelectorAll('[data-detail]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openDetail(btn.getAttribute('data-detail')); });
+    });
+  }
+
+  /* ---------- Modal chi tiết nông hộ ---------- */
+  function openDetail(farmId) {
+    const f = allFarms.find(function (x) { return x.id === farmId; });
+    if (!f) return;
+    const owner = userById[f.ownerId] || { name: '—', phone: '—' };
+    const farmFields = fieldsByFarm[f.id] || [];
+    const fieldIds = farmFields.map(function (d) { return d.id; });
+    const farmLogs = allLogs.filter(function (l) { return fieldIds.indexOf(l.fieldId) >= 0; });
+    const issues = farmLogs.filter(function (l) { return l.type === 'issue'; }).length;
+    const seasons = seasonsOfFarm(f);
+
+    const fieldRows = farmFields.length ? '<ul class="stack" style="list-style:none;padding:0;margin:0">' + farmFields.map(function (d) {
+      return '<li class="row row--between" style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px">' +
+        '<strong class="small">' + ui.escapeHtml(d.name) + '</strong>' +
+        '<span class="small muted">' + (Number(d.area) || 0).toFixed(1) + ' ha · ' + ui.escapeHtml(d.soilType) + '</span></li>';
+    }).join('') + '</ul>' : '<p class="small muted">Chưa có đồng ruộng đăng ký.</p>';
+
+    ui.openModal({
+      title: 'Chi tiết nông hộ',
+      size: 'lg',
+      body:
+        '<dl class="detail-list">' +
+          '<dt>Tên nông hộ</dt><dd><strong>' + ui.escapeHtml(f.name) + '</strong></dd>' +
+          '<dt>Chủ hộ</dt><dd>' + ui.escapeHtml(owner.name) + '</dd>' +
+          '<dt>Điện thoại</dt><dd>' + ui.escapeHtml(owner.phone || '—') + '</dd>' +
+          '<dt>Địa điểm</dt><dd>' + ui.escapeHtml(f.location) + '</dd>' +
+          '<dt>Diện tích</dt><dd>' + (Number(f.area) || 0).toFixed(1) + ' ha</dd>' +
+          '<dt>Trạng thái</dt><dd>' + ui.badge(f.status) + '</dd>' +
+          '<dt>Mùa vụ</dt><dd>' + seasons.length + ' mùa vụ</dd>' +
+          '<dt>Nhật ký</dt><dd>' + farmLogs.length + ' bản ghi</dd>' +
+          '<dt>Sự cố ghi nhận</dt><dd>' + (issues ? '<span class="badge badge--danger">' + issues + ' sự cố</span>' : '0') + '</dd>' +
+        '</dl>' +
+        '<hr class="divider">' +
+        '<h3 style="font-size:.95rem">Đồng ruộng (' + farmFields.length + ')</h3>' + fieldRows,
+      footer: '<button type="button" class="btn btn--secondary" data-close>Đóng</button>'
+    });
+  }
+
+  /* ---------- Hoạt động gần đây của HTX (timeline hợp nhất) ---------- */
+  async function loadActivity() {
+    const box = document.getElementById('htx-activity');
+    try {
+      const events = (await api.list('events'))
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 5)
+        .map(function (ev) { return { kind: 'event', date: ev.date, title: ev.title, desc: ev.location }; });
+      const logs = (await api.list('fieldLogs'))
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 5)
+        .map(function (l) { return { kind: l.type, date: l.date, title: l.title, desc: l.note }; });
+      const items = events.concat(logs).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+      if (!items.length) {
+        box.innerHTML = ui.emptyState({ icon: 'clock', title: 'Chưa có hoạt động', desc: 'Sự kiện HTX và nhật ký canh tác mới nhất sẽ hiển thị tại đây.' });
+        return;
+      }
+      box.innerHTML = '<div class="timeline">' + items.map(function (it) {
+        let dotCls = '', dotStyle = '';
+        if (it.kind === 'issue') dotCls = 'timeline__dot--danger';
+        else if (it.kind === 'note') dotCls = 'timeline__dot--warning';
+        else if (it.kind === 'activity') dotStyle = ' style="border-color:#90caf9"';
+        return '<div class="timeline__item"><span class="timeline__dot ' + dotCls + '"' + dotStyle + '></span>' +
+          '<div class="timeline__date">' + ui.fmtDate(it.date) + '</div>' +
+          '<div class="timeline__title">' + ui.escapeHtml(it.title) + '</div>' +
+          '<div class="timeline__desc">' + ui.escapeHtml(it.desc || '') + '</div></div>';
+      }).join('') + '</div>';
+    } catch (e) {
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadActivity);
+    }
+  }
+
+  /* ---------- Sự kiện lọc ---------- */
+  document.getElementById('f-keyword').addEventListener('input', ui.debounce(function () {
+    state.keyword = this.value; renderFarms();
+  }, 250));
+  document.getElementById('f-season-status').addEventListener('change', function () {
+    state.seasonStatus = this.value; renderFarms();
+  });
+
+  /* Boot */
+  loadStats(); loadFarms(); loadActivity();
+});
+</script>
+</body>
+</html>

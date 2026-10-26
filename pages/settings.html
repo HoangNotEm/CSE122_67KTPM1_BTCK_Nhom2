@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cài đặt – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="*" data-page="settings.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Cài đặt</h1>
+      <p>Tùy chỉnh thông báo, hiển thị và quản lý dữ liệu mô phỏng của bạn.</p>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr;align-items:start">
+    <div>
+      <!-- Thông báo -->
+      <section class="card" aria-labelledby="notif-title">
+        <div class="card__head"><h2 id="notif-title">Thông báo</h2></div>
+        <div class="stack">
+          <label class="checkbox"><input type="checkbox" id="set-notif-support"> Nhận thông báo về yêu cầu hỗ trợ</label>
+          <label class="checkbox"><input type="checkbox" id="set-notif-event"> Nhắc lịch hoạt động HTX</label>
+          <label class="checkbox"><input type="checkbox" id="set-notif-news"> Nhận bản tin kỹ thuật</label>
+        </div>
+        <div style="margin-top:16px">
+          <button type="button" class="btn btn--primary" id="btn-save-notif">Lưu</button>
+        </div>
+      </section>
+
+      <!-- Dữ liệu mô phỏng -->
+      <section class="card" aria-labelledby="data-title">
+        <div class="card__head"><h2 id="data-title">Dữ liệu mô phỏng</h2></div>
+        <p class="small muted">Toàn bộ dữ liệu của nguyên mẫu được lưu trong LocalStorage của trình duyệt. Bạn có thể xóa mọi thay đổi và quay về dữ liệu mẫu ban đầu, hoặc đăng xuất khỏi phiên hiện tại.</p>
+        <div class="row" style="margin-top:14px">
+          <button type="button" class="btn btn--danger-soft" id="btn-reset">Reset dữ liệu mẫu</button>
+          <button type="button" class="btn btn--secondary" id="btn-logout-page">Đăng xuất</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Hiển thị & trợ năng -->
+    <section class="card" aria-labelledby="display-title">
+      <div class="card__head"><h2 id="display-title">Hiển thị &amp; trợ năng</h2></div>
+      <div class="field">
+        <label class="field__label" for="set-fontsize">Cỡ chữ</label>
+        <select class="select" id="set-fontsize">
+          <option value="standard">Tiêu chuẩn</option>
+          <option value="large">Lớn</option>
+        </select>
+        <div class="field__hint">Áp dụng ngay cho toàn bộ giao diện và được nhớ lại ở lần truy cập sau.</div>
+      </div>
+      <label class="checkbox"><input type="checkbox" id="set-motion"> Giảm chuyển động (tắt hiệu ứng động)</label>
+    </section>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui;
+  const KEY = 'cropmate_settings';
+  const MOTION_STYLE_ID = 'cm-reduce-motion-style';
+
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveSettings(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+  const settings = loadSettings();
+  settings.notif = settings.notif || { support: true, event: true, news: false };
+
+  /* ---------- Hiển thị & trợ năng ---------- */
+  function applyFontSize(mode) {
+    document.documentElement.style.fontSize = mode === 'large' ? '17px' : '15px';
+  }
+  function applyReduceMotion(on) {
+    document.body.classList.toggle('reduce-motion', on);
+    let tag = document.getElementById(MOTION_STYLE_ID);
+    if (on && !tag) {
+      tag = document.createElement('style');
+      tag.id = MOTION_STYLE_ID;
+      tag.textContent = 'body.reduce-motion * { animation: none !important; transition: none !important; }';
+      document.head.appendChild(tag);
+    } else if (!on && tag) {
+      tag.remove();
+    }
+  }
+
+  applyFontSize(settings.fontSize);          /* áp dụng lại cài đặt đã lưu */
+  applyReduceMotion(!!settings.reduceMotion);
+
+  const fs = document.getElementById('set-fontsize');
+  fs.value = settings.fontSize === 'large' ? 'large' : 'standard';
+  fs.addEventListener('change', function () {
+    settings.fontSize = fs.value;
+    saveSettings(settings);
+    applyFontSize(fs.value);
+    ui.toast('Đã áp dụng cỡ chữ ' + (fs.value === 'large' ? 'Lớn' : 'Tiêu chuẩn') + '.', 'success');
+  });
+
+  const motion = document.getElementById('set-motion');
+  motion.checked = !!settings.reduceMotion;
+  motion.addEventListener('change', function () {
+    settings.reduceMotion = motion.checked;
+    saveSettings(settings);
+    applyReduceMotion(motion.checked);
+  });
+
+  /* ---------- Thông báo ---------- */
+  document.getElementById('set-notif-support').checked = !!settings.notif.support;
+  document.getElementById('set-notif-event').checked = !!settings.notif.event;
+  document.getElementById('set-notif-news').checked = !!settings.notif.news;
+
+  document.getElementById('btn-save-notif').addEventListener('click', function () {
+    settings.notif = {
+      support: document.getElementById('set-notif-support').checked,
+      event: document.getElementById('set-notif-event').checked,
+      news: document.getElementById('set-notif-news').checked
+    };
+    saveSettings(settings);
+    ui.toast('Đã lưu cài đặt thông báo.', 'success');
+  });
+
+  /* ---------- Dữ liệu mô phỏng ---------- */
+  document.getElementById('btn-reset').addEventListener('click', async function () {
+    const ok = await ui.confirmModal({
+      title: 'Reset dữ liệu mẫu',
+      message: 'Xóa toàn bộ thay đổi và về dữ liệu mẫu ban đầu?',
+      okText: 'Reset',
+      danger: true
+    });
+    if (!ok) return;
+    CM.api.reset();
+    localStorage.removeItem(KEY);
+    location.reload();
+  });
+
+  document.getElementById('btn-logout-page').addEventListener('click', function () {
+    CM.api.logout();
+    location.href = 'login.html';
+  });
+});
+</script>
+</body>
+</html>

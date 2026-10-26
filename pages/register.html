@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+<div class="public-page">
+  <nav class="public-nav" aria-label="Điều hướng chính">
+    <a class="brand" href="../index.html"><span class="brand__logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span><span>CropMate AI</span></a>
+    <div class="public-nav__links">
+      <a href="../index.html">Trang chủ</a>
+      <a href="login.html">Đăng nhập</a>
+    </div>
+  </nav>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-card__brand">
+        <span class="brand__logo" style="width:44px;height:44px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg></span>
+      </div>
+      <h1>Tạo tài khoản CropMate AI</h1>
+      <p class="auth-card__sub">Nhật ký mùa vụ thông minh cho nông hộ Việt</p>
+
+      <div class="demo-hint">Nguyên mẫu demo — mọi thông tin đăng ký chỉ được lưu cục bộ trên trình duyệt của bạn (LocalStorage).</div>
+
+      <form id="register-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="name">Họ tên <span class="req">*</span></label>
+          <input class="input" type="text" id="name" name="name" placeholder="Nguyễn Văn A" data-rules="required" autocomplete="name">
+          <div class="field__error"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="email">Email <span class="req">*</span></label>
+          <input class="input" type="email" id="email" name="email" placeholder="vidu@gmail.com" data-rules="required|email" autocomplete="email">
+          <div class="field__error"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="phone">Số điện thoại <span class="req">*</span></label>
+          <input class="input" type="tel" id="phone" name="phone" placeholder="0901 234 567" data-rules="required|phone" autocomplete="tel">
+          <div class="field__error"></div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label class="field__label" for="password">Mật khẩu <span class="req">*</span></label>
+            <input class="input" type="password" id="password" name="password" placeholder="Tối thiểu 6 ký tự" data-rules="required" autocomplete="new-password">
+            <div class="field__error"></div>
+          </div>
+          <div class="field">
+            <label class="field__label" for="confirm">Xác nhận mật khẩu <span class="req">*</span></label>
+            <input class="input" type="password" id="confirm" name="confirm" placeholder="Nhập lại mật khẩu" data-rules="required" autocomplete="new-password">
+            <div class="field__error"></div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label">Đăng ký với vai trò <span class="req">*</span></span>
+          <div class="role-picker" id="role-picker">
+            <button type="button" class="role-pick is-active" data-role="farmer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg> Nông dân</button>
+            <button type="button" class="role-pick" data-role="expert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21c0-9 4-15 14-16-1 10-5 15-14 16z"/><path d="M6 21c3-6 7-9 11-11"/></svg> Chuyên gia</button>
+            <button type="button" class="role-pick" data-role="coordinator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Điều phối HTX</button>
+            <button type="button" class="role-pick" data-role="admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Quản trị viên</button>
+          </div>
+          <div class="field__hint">Có thể đổi vai trò nhanh sau đó ở menu tài khoản (phục vụ demo).</div>
+        </div>
+        <div class="field" id="agree-field">
+          <label class="checkbox">
+            <input type="checkbox" id="agree" name="agree">
+            <span>Tôi đồng ý với <span style="text-decoration:underline">điều khoản sử dụng</span> của CropMate AI</span>
+          </label>
+          <div class="field__error"></div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block" id="btn-register">Đăng ký</button>
+      </form>
+
+      <div class="auth-alt">Đã có tài khoản? <a href="login.html">Đăng nhập</a></div>
+    </div>
+  </main>
+
+  <footer class="footer">CropMate AI · BTL môn Phát triển ứng dụng Web cơ bản (CSE122)</footer>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui;
+  const HOME = { farmer: 'farmer-season-dashboard.html', expert: 'expert-request-queue.html', coordinator: 'coordinator-farm-overview.html', admin: 'admin-dashboard.html' };
+
+  /* Nếu đã đăng nhập thì vào thẳng trang chủ vai trò */
+  const me0 = CM.api.current();
+  if (me0) { location.href = HOME[me0.role] || '../index.html'; return; }
+
+  let role = 'farmer';
+  document.querySelectorAll('#role-picker .role-pick').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('#role-picker .role-pick').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      role = btn.getAttribute('data-role');
+    });
+  });
+
+  const form = document.getElementById('register-form');
+  const agree = document.getElementById('agree');
+  ui.bindLiveValidation(form);
+
+  /* Helper: hiển thị lỗi tùy biến cho 1 trường (rule tự viết) */
+  function setFieldError(input, msg) {
+    const field = input.closest('.field');
+    field.classList.toggle('has-error', !!msg);
+    const errEl = field.querySelector('.field__error');
+    if (errEl) errEl.textContent = msg || '';
+    return !msg;
+  }
+  function validateAgree() {
+    return setFieldError(agree, agree.checked ? '' : 'Bạn cần đồng ý với điều khoản sử dụng để tiếp tục.');
+  }
+  agree.addEventListener('change', validateAgree);
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm');
+
+    /* Rule tự viết: mật khẩu >= 6 ký tự, xác nhận khớp, checkbox đồng ý */
+    let ok = ui.validateForm(form);
+    ok = setFieldError(password, password.value.length >= 6 ? '' : 'Mật khẩu cần ít nhất 6 ký tự.') && ok;
+    ok = setFieldError(confirm, confirm.value === password.value ? '' : 'Mật khẩu xác nhận không khớp.') && ok;
+    ok = validateAgree() && ok;
+
+    if (!ok) { ui.toast('Vui lòng kiểm tra lại thông tin đăng ký.', 'error'); return; }
+
+    const btn = document.getElementById('btn-register');
+    btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang tạo tài khoản...';
+    setTimeout(function () {
+      const data = ui.serializeForm(form);
+      const existed = CM.api.read('users').some(function (u) { return u.email.toLowerCase() === String(data.email).toLowerCase(); });
+      const session = CM.api.login(data.email, role);
+      /* Chỉ bổ sung họ tên/SĐT khi tài khoản được tạo mới (mock) */
+      if (!existed) CM.api.update('users', session.userId, { name: data.name.trim(), phone: data.phone.trim() });
+      ui.toast('Đăng ký thành công!', 'success');
+      location.href = HOME[role];
+    }, 700);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     TRANG CHUẨN (REFERENCE) – mọi trang app khác bắt chước pattern này:
+     · body data-role + data-page đúng tên tệp
+     · main#main duy nhất, chrome (topbar/sidebar) do js/main.js tự dựng
+     · thứ tự script: data → api → modules/ui → modules/ai → main → script riêng của trang
+     · dữ liệu luôn qua CM.api (không hard-code), đủ trạng thái loading/empty/error
+     ============================================================ -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng quan mùa vụ – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="farmer" data-page="farmer-season-dashboard.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Tổng quan mùa vụ</h1>
+      <p>Xin chào, <strong id="greeting-name">nông dân</strong>. Theo dõi tiến độ các mùa vụ và nhận gợi ý công việc từ AI.</p>
+    </div>
+    <div class="page-head__actions">
+      <a class="btn btn--secondary" href="farmer-help-request.html" id="btn-new-request">Tạo yêu cầu hỗ trợ</a>
+      <a class="btn btn--primary" href="farmer-field-log.html" id="btn-new-log">Ghi nhật ký mới</a>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh -->
+  <section class="grid grid--4" id="stats" aria-label="Thống kê nhanh">
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+    <div class="skeleton skeleton--card"></div>
+  </section>
+
+  <div class="grid" style="grid-template-columns: 2fr 1fr; margin-top: 16px;" id="dashboard-cols">
+    <!-- Mùa vụ của tôi -->
+    <section class="card" aria-labelledby="seasons-title">
+      <div class="card__head">
+        <h2 id="seasons-title">Mùa vụ của tôi</h2>
+        <a class="btn btn--ghost btn--sm" href="farmer-field-log.html">Xem nhật ký</a>
+      </div>
+      <div id="season-list"><div class="skeleton skeleton--line w-80"></div><div class="skeleton skeleton--line w-60"></div><div class="skeleton skeleton--line w-40"></div></div>
+    </section>
+
+    <!-- Hoạt động gần đây -->
+    <section class="card" aria-labelledby="activity-title">
+      <div class="card__head"><h2 id="activity-title">Hoạt động gần đây</h2></div>
+      <div id="recent-activity"><div class="skeleton skeleton--line w-80"></div><div class="skeleton skeleton--line w-60"></div></div>
+    </section>
+  </div>
+
+  <!-- AI-2: Season Checklist Generator -->
+  <section class="ai-panel" style="margin-top: 16px;" aria-labelledby="ai2-title">
+    <div class="ai-panel__head">
+      <span class="ai-panel__icon" id="ai2-icon"></span>
+      <div>
+        <h3 id="ai2-title">AI-2 · Trợ lý checklist công việc theo giai đoạn</h3>
+        <p>Chọn cây trồng và giai đoạn — AI đề xuất danh sách việc cần làm kèm lý do.</p>
+      </div>
+      <div class="ai-panel__mode">
+        <label class="small muted" for="ai2-mode">Mô phỏng:</label>
+        <select id="ai2-mode">
+          <option value="ok">Thành công</option>
+          <option value="insufficient">Thiếu dữ liệu</option>
+          <option value="uncertain">AI không chắc chắn</option>
+          <option value="network">Lỗi mạng</option>
+        </select>
+      </div>
+    </div>
+
+    <form id="ai2-form" novalidate>
+      <div class="form-row">
+        <div class="field">
+          <label class="field__label" for="ai2-crop">Cây trồng <span class="req">*</span></label>
+          <select class="select" id="ai2-crop" name="cropId" data-rules="required"></select>
+          <div class="field__error"></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="ai2-stage">Giai đoạn sinh trưởng <span class="req">*</span></label>
+          <select class="select" id="ai2-stage" name="stage" data-rules="required" disabled>
+            <option value="">— Chọn cây trồng trước —</option>
+          </select>
+          <div class="field__error"></div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn--primary" id="ai2-submit">Tạo checklist bằng AI</button>
+    </form>
+
+    <div id="ai2-output" aria-live="polite"></div>
+  </section>
+
+  <!-- Checklist AI-2 đã lưu: đọc lại từ LocalStorage để kết quả AI
+       thực sự nằm trong dữ liệu ứng dụng, không chỉ hiện toast rồi mất. -->
+  <section class="card" style="margin-top:16px;" aria-labelledby="saved-checklists-title">
+    <div class="card__head">
+      <h2 id="saved-checklists-title">Checklist đã lưu</h2>
+      <span class="small muted" id="saved-checklists-count"></span>
+    </div>
+    <div id="saved-checklists" aria-live="polite">
+      <div class="skeleton skeleton--line w-80"></div>
+      <div class="skeleton skeleton--line w-60"></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/modules/ai.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api, ai = CM.ai;
+  const me = api.current();
+  if (!me) return;
+
+  /* ---------- Dữ liệu nền ---------- */
+  const crops = api.read('crops').filter(function (c) { return c.status === 'active'; });
+  const fields = api.read('fields');
+  const farms = api.read('farms').filter(function (f) { return f.ownerId === me.id; });
+  const myFieldIds = farms.length
+    ? fields.filter(function (d) { return farms.some(function (f) { return f.id === d.farmId; }); }).map(function (d) { return d.id; })
+    : fields.map(function (d) { return d.id; }); /* dữ liệu mẫu: hiển thị tất cả nếu nông dân chưa có nông hộ */
+  const cropById = {}; crops.forEach(function (c) { cropById[c.id] = c; });
+  const fieldById = {}; fields.forEach(function (d) { fieldById[d.id] = d; });
+
+  document.getElementById('greeting-name').textContent = me.name;
+  document.getElementById('ai2-icon').innerHTML = ui.icon('leaf');
+
+  /* ---------- Thống kê ---------- */
+  async function loadStats() {
+    try {
+      const seasons = await api.list('seasons');
+      const requests = await api.list('helpRequests');
+      const logs = await api.list('fieldLogs');
+      const mySeasons = seasons.filter(function (s) { return myFieldIds.indexOf(s.fieldId) >= 0; });
+      const openIssues = requests.filter(function (r) { return r.status === 'pending' || r.status === 'assigned'; }).length;
+      const thisMonth = logs.filter(function (l) { return l.date.slice(0, 7) === ui.todayISO().slice(0, 7); }).length;
+      const avgProgress = mySeasons.length ? Math.round(mySeasons.reduce(function (a, s) { return a + (s.progress || 0); }, 0) / mySeasons.length) : 0;
+
+      const stats = [
+        { icon: 'grid', cls: '', value: mySeasons.length, label: 'Mùa vụ đang quản lý' },
+        { icon: 'alert', cls: 'stat__icon--red', value: openIssues, label: 'Yêu cầu đang mở', trend: openIssues ? 'Cần theo dõi' : '', trendCls: openIssues ? 'stat__trend--down' : 'stat__trend--up' },
+        { icon: 'file', cls: 'stat__icon--blue', value: thisMonth, label: 'Nhật ký tháng này' },
+        { icon: 'chart', cls: 'stat__icon--amber', value: avgProgress + '%', label: 'Tiến độ trung bình' }
+      ];
+      document.getElementById('stats').innerHTML = stats.map(function (s) {
+        return '<div class="stat"><span class="stat__icon ' + s.cls + '">' + ui.icon(s.icon) + '</span>' +
+          '<div><div class="stat__value">' + s.value + '</div><div class="stat__label">' + s.label + '</div>' +
+          (s.trend ? '<div class="stat__trend ' + s.trendCls + '">' + s.trend + '</div>' : '') + '</div></div>';
+      }).join('');
+    } catch (e) {
+      document.getElementById('stats').innerHTML = '<div class="card" style="grid-column:1/-1">' + ui.errorState(e.message) + '</div>';
+      bindRetry(loadStats);
+    }
+  }
+
+  /* ---------- Danh sách mùa vụ ---------- */
+  async function loadSeasons() {
+    const box = document.getElementById('season-list');
+    box.innerHTML = ui.skeletonList(3);
+    try {
+      const seasons = (await api.list('seasons')).filter(function (s) { return myFieldIds.indexOf(s.fieldId) >= 0; });
+      if (!seasons.length) {
+        box.innerHTML = ui.emptyState({
+          icon: 'sprout', title: 'Chưa có mùa vụ nào',
+          desc: 'Bắt đầu bằng cách ghi nhật ký cho đồng ruộng đầu tiên — hệ thống sẽ tổ chức dữ liệu theo mùa vụ giúp bạn.',
+          action: '<a class="btn btn--primary" href="farmer-field-log.html">' + ui.icon('plus') + ' Ghi nhật ký đầu tiên</a>'
+        });
+        return;
+      }
+      box.innerHTML = '<div class="stack">' + seasons.map(function (s) {
+        const crop = cropById[s.cropId] || { name: '—' };
+        const field = fieldById[s.fieldId] || { name: '—' };
+        return '<article class="card" style="box-shadow:none">' +
+          '<div class="row row--between">' +
+            '<div><strong>' + ui.escapeHtml(s.name) + '</strong> <span class="muted small">· ' + ui.escapeHtml(field.name) + '</span>' +
+            '<div class="small muted">' + ui.escapeHtml(crop.name) + ' · Giai đoạn: <strong>' + ui.escapeHtml(s.stage) + '</strong> · Ước tính ' + ui.escapeHtml(s.yieldEstimate || '—') + '</div></div>' +
+            ui.badge(s.status) +
+          '</div>' +
+          '<div class="row" style="margin-top:10px"><div class="progress" style="flex:1"><div class="progress__bar' + (s.progress < 40 ? ' progress__bar--amber' : '') + '" style="width:' + s.progress + '%"></div></div>' +
+          '<span class="small muted">' + s.progress + '%</span></div>' +
+          '<div class="row" style="margin-top:10px">' +
+            '<a class="btn btn--ghost btn--sm" href="farmer-field-log.html?season=' + s.id + '">' + ui.icon('file') + ' Nhật ký</a>' +
+            '<a class="btn btn--ghost btn--sm" href="farmer-help-request.html?season=' + s.id + '">' + ui.icon('inbox') + ' Yêu cầu hỗ trợ</a>' +
+          '</div></article>';
+      }).join('') + '</div>';
+    } catch (e) {
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadSeasons);
+    }
+  }
+
+  /* ---------- Hoạt động gần đây ---------- */
+  async function loadActivity() {
+    const box = document.getElementById('recent-activity');
+    try {
+      const logs = (await api.list('fieldLogs'))
+        .filter(function (l) { return myFieldIds.indexOf(l.fieldId) >= 0; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 5);
+      if (!logs.length) {
+        box.innerHTML = ui.emptyState({ icon: 'clock', title: 'Chưa có hoạt động', desc: 'Các nhật ký mới nhất sẽ hiển thị tại đây.' });
+        return;
+      }
+      box.innerHTML = '<div class="timeline">' + logs.map(function (l) {
+        const dot = l.type === 'issue' ? 'timeline__dot--danger' : (l.type === 'activity' ? '' : 'timeline__dot--warning');
+        return '<div class="timeline__item"><span class="timeline__dot ' + dot + '"></span>' +
+          '<div class="timeline__date">' + ui.fmtDate(l.date) + '</div>' +
+          '<div class="timeline__title">' + ui.escapeHtml(l.title) + '</div></div>';
+      }).join('') + '</div>';
+    } catch (e) {
+      box.innerHTML = ui.errorState(e.message);
+      bindRetry(loadActivity);
+    }
+  }
+
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ================= AI-2: Season Checklist Generator ================= */
+  const cropSel = document.getElementById('ai2-crop');
+  const stageSel = document.getElementById('ai2-stage');
+  const out = document.getElementById('ai2-output');
+  let lastResult = null;
+
+  cropSel.innerHTML = '<option value="">— Chọn cây trồng —</option>' +
+    crops.map(function (c) { return '<option value="' + c.id + '">' + ui.escapeHtml(c.name) + '</option>'; }).join('');
+  cropSel.addEventListener('change', function () {
+    const crop = cropById[cropSel.value];
+    stageSel.innerHTML = crop
+      ? '<option value="">— Chọn giai đoạn —</option>' + crop.growthStages.map(function (s) { return '<option>' + ui.escapeHtml(s) + '</option>'; }).join('')
+      : '<option value="">— Chọn cây trồng trước —</option>';
+    stageSel.disabled = !crop;
+    out.innerHTML = '';
+  });
+
+  document.getElementById('ai2-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!ui.validateForm(this)) return;
+    const crop = cropById[cropSel.value];
+    const mode = document.getElementById('ai2-mode').value;
+    const btn = document.getElementById('ai2-submit');
+    btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> AI đang phân tích...';
+    out.innerHTML =
+      '<div class="ai-processing" role="status"><span class="spinner"></span><div><strong>AI đang xử lý...</strong>' +
+      '<ul class="ai-steps">' +
+      '<li class="is-done">Đọc danh mục cây trồng</li>' +
+      '<li class="is-current">Tra bộ quy tắc giai đoạn "' + ui.escapeHtml(stageSel.value) + '"</li>' +
+      '<li>Sắp xếp ưu tiên công việc</li></ul></div></div>';
+    try {
+      const res = await ai.generateChecklist(crop, stageSel.value, { mode: mode });
+      lastResult = res;
+      renderAiResult(res);
+    } catch (err) {
+      renderAiError(err, function () { document.getElementById('ai2-form').requestSubmit(); });
+    } finally {
+      btn.disabled = false; btn.innerHTML = 'Tạo checklist bằng AI';
+    }
+  });
+
+  function renderAiResult(res) {
+    out.innerHTML =
+      '<div class="ai-result"><div class="ai-result__title">' + ui.icon('check') + ' Checklist giai đoạn "' + ui.escapeHtml(res.stage) + '" — ' + ui.escapeHtml(res.cropName) + '</div>' +
+      '<div class="ai-result__why">' + ui.escapeHtml(res.why) + '</div>' +
+      '<div class="stack" id="ai2-items">' + res.items.map(function (it, i) {
+        return '<label class="checkbox" style="align-items:flex-start"><input type="checkbox" data-idx="' + i + '"><span><strong>' + ui.escapeHtml(it.task) + '</strong><br><span class="small muted">' + ui.escapeHtml(it.reason) + '</span> <span class="badge badge--' + (it.priority === 'high' ? 'danger' : it.priority === 'medium' ? 'warning' : 'neutral') + '" style="margin-left:4px">' + ui.statusLabel(it.priority) + '</span></span></label>';
+      }).join('') + '</div>' +
+      '<p class="small muted" style="margin:10px 0 0">' + ui.escapeHtml(res.disclaimer) + '</p>' +
+      '<div class="ai-result__actions">' +
+        '<button type="button" class="btn btn--primary btn--sm" data-ai-accept>' + ui.icon('check') + ' Chấp nhận &amp; lưu</button>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-ai-edit>' + ui.icon('edit') + ' Sửa</button>' +
+        '<button type="button" class="btn btn--secondary btn--sm" data-ai-regen>' + ui.icon('refresh') + ' Tạo lại</button>' +
+        '<button type="button" class="btn btn--danger-soft btn--sm" data-ai-reject>' + ui.icon('x') + ' Từ chối</button>' +
+      '</div></div>';
+
+    out.querySelector('[data-ai-accept]').addEventListener('click', function () {
+      const chosen = [];
+      out.querySelectorAll('#ai2-items input[type=checkbox]').forEach(function (cb) {
+        if (!cb.checked) return;
+        const idx = Number(cb.getAttribute('data-idx'));
+        const goc = lastResult.items[idx];
+        // Đọc lại chữ trong <strong>: nếu người dùng đã bấm "Sửa" thì
+        // nội dung hiển thị mới là nội dung họ muốn lưu.
+        const strong = cb.closest('label').querySelector('strong');
+        chosen.push({
+          task: strong ? strong.textContent.trim() : goc.task,
+          reason: goc.reason,
+          priority: goc.priority
+        });
+      });
+      if (!chosen.length) { ui.toast('Vui lòng tick chọn ít nhất 1 công việc để lưu.', 'warning'); return; }
+      const saved = readChecklists();
+      saved.push({
+        id: 'cl' + Date.now(),
+        farmerId: me.id,
+        cropId: cropSel.value,
+        cropName: res.cropName,
+        stage: res.stage,
+        items: chosen,
+        savedAt: ui.todayISO()
+      });
+      writeChecklists(saved);
+      ui.toast('Đã lưu ' + chosen.length + ' công việc vào checklist của bạn.', 'success');
+      out.innerHTML = '';
+      lastResult = null;
+      loadSavedChecklists();
+    });
+    out.querySelector('[data-ai-edit]').addEventListener('click', function () {
+      out.querySelectorAll('#ai2-items strong').forEach(function (el) { el.contentEditable = 'true'; el.style.borderBottom = '1px dashed var(--green-700)'; });
+      ui.toast('Đã bật chế độ sửa — nhấn vào tên công việc để chỉnh, rồi Chấp nhận & lưu.', 'info');
+    });
+    out.querySelector('[data-ai-regen]').addEventListener('click', function () { document.getElementById('ai2-form').requestSubmit(); });
+    out.querySelector('[data-ai-reject]').addEventListener('click', function () {
+      out.innerHTML = ''; ui.toast('Đã bỏ kết quả AI. Bạn có thể tạo lại hoặc tự lập checklist thủ công.', 'info');
+    });
+  }
+
+  function renderAiError(err, retryFn) {
+    const acts = [];
+    if (err.code === 'network') acts.push('<button type="button" class="btn btn--primary btn--sm" data-ai-retry>' + ui.icon('refresh') + ' Thử lại</button>');
+    if (err.code === 'insufficient') acts.push('<button type="button" class="btn btn--secondary btn--sm" data-ai-retry>' + ui.icon('edit') + ' Bổ sung dữ liệu</button>');
+    if (err.code === 'uncertain') acts.push('<button type="button" class="btn btn--secondary btn--sm" data-ai-retry>' + ui.icon('refresh') + ' Thử lại</button>');
+    acts.push('<button type="button" class="btn btn--ghost btn--sm" data-ai-manual>' + ui.icon('edit') + ' Dùng thủ công</button>');
+    out.innerHTML =
+      '<div class="ai-result" style="border-color:#ef9a9a;background:var(--danger-bg)">' +
+      '<div class="ai-result__title">' + ui.icon('alert') + ' AI không đưa ra được kết quả</div>' +
+      '<p class="muted" style="margin:0 0 10px">' + ui.escapeHtml(err.message) + '</p>' +
+      '<div class="ai-result__actions">' + acts.join('') + '</div></div>';
+    const r = out.querySelector('[data-ai-retry]');
+    if (r) r.addEventListener('click', retryFn);
+    const m = out.querySelector('[data-ai-manual]');
+    if (m) m.addEventListener('click', function () {
+      ui.toast('Chế độ thủ công: hãy tự liệt kê việc cần làm trong nhật ký đồng ruộng.', 'info');
+    });
+  }
+
+  /* ================= Checklist đã lưu (kết quả AI-2 nằm trong dữ liệu) ================= */
+  function readChecklists() {
+    try { return JSON.parse(localStorage.getItem('cropmate_checklists') || '[]'); }
+    catch (e) { return []; }
+  }
+  function writeChecklists(list) {
+    localStorage.setItem('cropmate_checklists', JSON.stringify(list));
+  }
+  function focusAiForm() {
+    document.getElementById('ai2-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    cropSel.focus();
+  }
+
+  function loadSavedChecklists() {
+    const box = document.getElementById('saved-checklists');
+    const count = document.getElementById('saved-checklists-count');
+    const mine = readChecklists().filter(function (c) { return c.farmerId === me.id || !c.farmerId; });
+    count.textContent = mine.length ? mine.length + ' checklist' : '';
+
+    if (!mine.length) {
+      box.innerHTML = ui.emptyState({
+        icon: 'leaf',
+        title: 'Chưa lưu checklist nào',
+        desc: 'Tạo checklist bằng AI ở khung phía trên, tick chọn công việc rồi bấm "Chấp nhận & lưu" — kết quả sẽ xuất hiện tại đây.',
+        action: '<button type="button" class="btn btn--secondary" data-create-checklist>' + ui.icon('plus') + ' Tạo checklist bằng AI</button>'
+      });
+      box.querySelector('[data-create-checklist]').addEventListener('click', focusAiForm);
+      return;
+    }
+
+    box.innerHTML = '<div class="stack">' + mine.map(function (c) {
+      return '<article class="card" style="box-shadow:none" data-cl="' + c.id + '">' +
+        '<div class="row row--between" style="align-items:flex-start">' +
+          '<div><strong>' + ui.escapeHtml(c.cropName) + ' · ' + ui.escapeHtml(c.stage) + '</strong>' +
+          '<div class="small muted">Lưu ngày ' + ui.fmtDate(c.savedAt) + ' · ' + c.items.length + ' công việc</div></div>' +
+          '<button type="button" class="btn btn--ghost btn--sm" data-cl-delete="' + c.id + '" aria-label="Xóa checklist ' + ui.escapeHtml(c.cropName) + '">' + ui.icon('trash') + ' Xóa</button>' +
+        '</div>' +
+        '<ul class="stack" style="margin:10px 0 0; padding-left:18px">' +
+          c.items.map(function (it) {
+            return '<li>' + ui.escapeHtml(it.task) +
+              ' <span class="badge badge--' + (it.priority === 'high' ? 'danger' : it.priority === 'medium' ? 'warning' : 'neutral') + '">' + ui.statusLabel(it.priority) + '</span></li>';
+          }).join('') +
+        '</ul></article>';
+    }).join('') + '</div>';
+
+    box.querySelectorAll('[data-cl-delete]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const id = btn.getAttribute('data-cl-delete');
+        ui.confirmModal({
+          title: 'Xóa checklist đã lưu?',
+          message: 'Checklist này sẽ bị xóa khỏi dữ liệu ứng dụng. Bạn vẫn có thể tạo lại bằng AI.',
+          okText: 'Xóa checklist',
+          danger: true
+        }).then(function (ok) {
+          if (!ok) return;
+          writeChecklists(readChecklists().filter(function (c) { return c.id !== id; }));
+          ui.toast('Đã xóa checklist.', 'success');
+          loadSavedChecklists();
+        });
+      });
+    });
+  }
+
+  /* Boot */
+  ui.bindLiveValidation(document.getElementById('ai2-form'));
+  loadStats(); loadSeasons(); loadActivity(); loadSavedChecklists();
+});
+</script>
+</body>
+</html>

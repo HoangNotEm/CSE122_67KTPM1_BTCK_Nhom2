@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch hoạt động HTX – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <style>
+    /* Lịch tháng (riêng trang này) */
+    .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--border); }
+    .cal__head { background: var(--surface-2); padding: 8px 4px; text-align: center; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); }
+    .cal__day { background: var(--surface); border-top: 1px solid var(--border); border-left: 1px solid var(--border); min-height: 90px; padding: 6px; font-size: .8rem; }
+    .cal__day:nth-child(7n+1) { border-left: 0; }
+    .cal__day--muted { background: var(--surface-2); color: var(--text-3); }
+    .cal__day--today { outline: 2px solid var(--green-700); outline-offset: -2px; background: var(--green-50); }
+    .cal__num { font-weight: 700; margin-bottom: 4px; }
+    .cal__chip { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; background: var(--info-bg); color: var(--info); border-radius: 6px; padding: 2px 6px; margin-bottom: 3px; font-size: .74rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal__chip:hover { filter: brightness(.95); }
+    .cal__chip--cancelled { opacity: .5; text-decoration: line-through; }
+    .cal__chip--completed { background: var(--success-bg); color: var(--success); }
+    .cal__more { border: 0; background: none; color: var(--text-3); font-size: .72rem; font-weight: 700; cursor: pointer; padding: 0 4px; }
+    .cal__more:hover { color: var(--green-800); }
+    /* Lịch tuần */
+    .week__day { padding: 10px 0; border-bottom: 1px dashed var(--border); }
+    .week__day:last-child { border-bottom: 0; }
+    .week__label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); margin-bottom: 6px; }
+    .week__label strong { color: var(--text); }
+  </style>
+</head>
+<body data-role="coordinator" data-page="coordinator-calendar.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Lịch hoạt động HTX</h1>
+      <p>Theo dõi, tạo mới và điều chỉnh các sự kiện chung của HTX Phú Hưng.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-add-event"></button>
+    </div>
+  </div>
+
+  <section class="card" aria-label="Bộ chọn lịch">
+    <div class="row row--between">
+      <div class="row">
+        <div class="segmented" role="tablist" aria-label="Chế độ xem lịch">
+          <button type="button" class="segmented__btn is-active" data-view="month">Tháng</button>
+          <button type="button" class="segmented__btn" data-view="week">Tuần</button>
+        </div>
+        <div class="row" style="gap:6px">
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-prev" aria-label="Tháng trước"></button>
+          <strong id="cal-title" aria-live="polite"></strong>
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-next" aria-label="Tháng sau"></button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="small muted" for="month-picker">Tháng xem:</label>
+        <select class="select" id="month-picker" style="min-width:130px"></select>
+      </div>
+    </div>
+  </section>
+
+  <div id="calendar-body" style="margin-top:16px">
+    <div class="skeleton skeleton--card"></div>
+  </div>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  const farms = api.read('farms');
+  const farmById = {}; farms.forEach(function (f) { farmById[f.id] = f; });
+  const WD = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  const state = { view: 'month', ym: null, events: [] };
+  const body = document.getElementById('calendar-body');
+  const btnAdd = document.getElementById('btn-add-event');
+  btnAdd.innerHTML = ui.icon('plus') + ' Thêm sự kiện';
+  document.getElementById('btn-prev').innerHTML = ui.icon('arrowL');
+  document.getElementById('btn-next').innerHTML = ui.icon('arrowL');
+  document.getElementById('btn-next').querySelector('svg').style.transform = 'scaleX(-1)';
+
+  function bindRetry(fn) {
+    document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', fn); });
+  }
+
+  /* ---------- Nạp dữ liệu ---------- */
+  async function loadEvents(silent) {
+    if (!silent) body.innerHTML = ui.skeletonList(2);
+    try {
+      state.events = await api.list('events');
+      buildMonthPicker();
+      renderCalendar();
+    } catch (e) {
+      body.innerHTML = ui.errorState(e.message);
+      bindRetry(function () { loadEvents(false); });
+    }
+  }
+
+  function ymOf(d) { return d.slice(0, 7); }
+
+  /* ---------- Select "Tháng xem" ---------- */
+  function buildMonthPicker() {
+    const sel = document.getElementById('month-picker');
+    const counts = {};
+    state.events.forEach(function (ev) { const k = ymOf(ev.date); counts[k] = (counts[k] || 0) + 1; });
+    let months = Object.keys(counts).sort();
+    if (!months.length) months = [ui.todayISO().slice(0, 7)];
+    /* Tháng đang xem luôn có trong danh sách */
+    if (state.ym && months.indexOf(state.ym) < 0) { months.push(state.ym); months.sort(); }
+    /* Mặc định: '2026-10' nếu có, ngược lại tháng hiện tại, cuối cùng là tháng có nhiều sự kiện nhất */
+    if (!state.ym) {
+      const nowYm = ui.todayISO().slice(0, 7);
+      if (months.indexOf('2026-10') >= 0) state.ym = '2026-10';
+      else if (months.indexOf(nowYm) >= 0) state.ym = nowYm;
+      else state.ym = months.slice().sort(function (a, b) { return (counts[b] || 0) - (counts[a] || 0); })[0];
+    }
+    sel.innerHTML = months.map(function (m) {
+      const label = 'Tháng ' + m.slice(5, 7) + '/' + m.slice(0, 4) + (counts[m] ? ' (' + counts[m] + ')' : '');
+      return '<option value="' + m + '"' + (m === state.ym ? ' selected' : '') + '>' + label + '</option>';
+    }).join('');
+  }
+
+  function eventsOfDay(iso) {
+    return state.events.filter(function (ev) { return ev.date === iso; })
+      .sort(function (a, b) { return (a.time || '') < (b.time || '') ? -1 : 1; });
+  }
+
+  /* ---------- Render chính ---------- */
+  function renderCalendar() {
+    const parts = state.ym.split('-');
+    const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+    const monthName = 'Tháng ' + (m + 1) + '/' + y;
+    const monthEvents = state.events.filter(function (ev) { return ymOf(ev.date) === state.ym; });
+
+    document.getElementById('cal-title').textContent =
+      state.view === 'month' ? monthName : monthName + ' · Tuần đầu tháng';
+
+    if (!monthEvents.length) {
+      body.innerHTML = ui.emptyState({
+        icon: 'calendar', title: 'Tháng này chưa có sự kiện',
+        desc: 'Chưa có hoạt động nào được lên lịch cho ' + monthName.toLowerCase() + '.',
+        action: '<button type="button" class="btn btn--primary" id="btn-empty-add">' + ui.icon('plus') + ' Thêm sự kiện</button>'
+      });
+      const b = document.getElementById('btn-empty-add');
+      if (b) b.addEventListener('click', function () { openEventForm(null); });
+      return;
+    }
+    body.innerHTML = state.view === 'month' ? renderMonth(y, m) : renderWeek(y, m);
+    bindCalendarEvents();
+  }
+
+  function chipHtml(ev) {
+    const cls = ev.status === 'cancelled' ? ' cal__chip--cancelled' : (ev.status === 'completed' ? ' cal__chip--completed' : '');
+    return '<button type="button" class="cal__chip' + cls + '" data-ev="' + ev.id + '" title="' + ui.escapeHtml(ev.title) + '">' +
+      (ev.time ? ev.time + ' ' : '') + ui.escapeHtml(ev.title) + '</button>';
+  }
+
+  function renderMonth(y, m) {
+    const first = new Date(y, m, 1);
+    const offset = (first.getDay() + 6) % 7; /* Thứ Hai đầu tuần */
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const today = ui.todayISO();
+    let cells = WD.map(function (w) { return '<div class="cal__head">' + w + '</div>'; }).join('');
+    for (let i = 0; i < offset; i++) cells += '<div class="cal__day cal__day--muted"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const dayEv = eventsOfDay(iso);
+      let inner = '<div class="cal__num">' + d + '</div>';
+      if (dayEv.length) {
+        inner += dayEv.slice(0, 2).map(chipHtml).join('');
+        if (dayEv.length > 2) inner += '<button type="button" class="cal__more" data-day="' + iso + '">+' + (dayEv.length - 2) + ' sự kiện nữa</button>';
+      }
+      cells += '<div class="cal__day' + (iso === today ? ' cal__day--today' : '') + '" data-date="' + iso + '">' + inner + '</div>';
+    }
+    return '<div class="cal">' + cells + '</div>';
+  }
+
+  function renderWeek(y, m) {
+    const first = new Date(y, m, 1);
+    const monday = new Date(first); monday.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    let out = '<div class="card" style="box-shadow:none"><div class="card__head"><h2>Tuần từ ' + ui.fmtDate(fmtISO(monday)) + '</h2></div>';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday); d.setDate(monday.getDate() + i);
+      const iso = fmtISO(d);
+      const dayEv = eventsOfDay(iso);
+      const wd = WD[i] + (iso === ui.todayISO() ? ' · Hôm nay' : '');
+      out += '<div class="week__day"><div class="week__label">' + wd + ' — <strong>' + ui.fmtDate(iso) + '</strong></div>';
+      if (dayEv.length) {
+        out += '<div class="stack">' + dayEv.map(function (ev) {
+          const dim = ev.status === 'cancelled' ? 'opacity:.55;text-decoration:line-through;' : '';
+          return '<button type="button" class="row row--between" data-ev="' + ev.id + '" style="' + dim + 'width:100%;text-align:left;border:1px solid var(--border);background:var(--surface-2);border-radius:8px;padding:8px 12px;cursor:pointer">' +
+            '<span><strong class="small">' + (ev.time || '') + ' — ' + ui.escapeHtml(ev.title) + '</strong> ' + ui.badge(ev.status) + '</span>' +
+            '<span class="small muted">' + ui.icon('mapPin', 'width="13" height="13" style="vertical-align:-2px"') + ' ' + ui.escapeHtml(ev.location) + '</span></button>';
+        }).join('') + '</div>';
+      } else {
+        out += '<p class="small muted" style="margin:0">Không có sự kiện.</p>';
+      }
+      out += '</div>';
+    }
+    return out + '</div>';
+  }
+
+  function fmtISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function bindCalendarEvents() {
+    body.querySelectorAll('[data-ev]').forEach(function (el) {
+      el.addEventListener('click', function () { openEventDetail(el.getAttribute('data-ev')); });
+    });
+    body.querySelectorAll('[data-day]').forEach(function (el) {
+      el.addEventListener('click', function () { openDayList(el.getAttribute('data-day')); });
+    });
+  }
+
+  /* ---------- Modal: danh sách sự kiện 1 ngày ---------- */
+  function openDayList(iso) {
+    const dayEv = eventsOfDay(iso);
+    ui.openModal({
+      title: 'Sự kiện ngày ' + ui.fmtDate(iso),
+      body: '<div class="stack">' + dayEv.map(function (ev) {
+        return '<button type="button" class="row row--between" data-ev="' + ev.id + '" style="width:100%;text-align:left;border:1px solid var(--border);background:var(--surface-2);border-radius:8px;padding:9px 12px;cursor:pointer">' +
+          '<span><strong class="small">' + (ev.time || '') + ' — ' + ui.escapeHtml(ev.title) + '</strong></span>' + ui.badge(ev.status) + '</button>';
+      }).join('') + '</div>',
+      footer: '<button type="button" class="btn btn--secondary" data-close>Đóng</button>'
+    });
+    document.querySelectorAll('#cm-modal [data-ev]').forEach(function (el) {
+      el.addEventListener('click', function () { openEventDetail(el.getAttribute('data-ev')); });
+    });
+  }
+
+  /* ---------- Modal: chi tiết sự kiện ---------- */
+  function openEventDetail(id) {
+    const ev = state.events.find(function (x) { return x.id === id; });
+    if (!ev) return;
+    const farm = ev.relatedFarmId ? farmById[ev.relatedFarmId] : null;
+    const canEdit = ev.status === 'scheduled';
+    ui.openModal({
+      title: 'Chi tiết sự kiện',
+      body:
+        '<dl class="detail-list">' +
+          '<dt>Tiêu đề</dt><dd><strong>' + ui.escapeHtml(ev.title) + '</strong></dd>' +
+          '<dt>Ngày</dt><dd>' + ui.fmtDate(ev.date) + '</dd>' +
+          '<dt>Giờ</dt><dd>' + ui.escapeHtml(ev.time || 'Cả ngày') + '</dd>' +
+          '<dt>Địa điểm</dt><dd>' + ui.escapeHtml(ev.location) + '</dd>' +
+          '<dt>Đơn vị tổ chức</dt><dd>' + ui.escapeHtml(ev.organizer) + '</dd>' +
+          '<dt>Nông hộ liên quan</dt><dd>' + (farm ? ui.escapeHtml(farm.name) : '—') + '</dd>' +
+          '<dt>Ghi chú</dt><dd>' + (ev.note ? ui.escapeHtml(ev.note) : '—') + '</dd>' +
+          '<dt>Trạng thái</dt><dd>' + ui.badge(ev.status) + '</dd>' +
+        '</dl>',
+      footer:
+        (canEdit ? '<button type="button" class="btn btn--danger-soft" data-cancel>' + ui.icon('ban') + ' Hủy sự kiện</button>' : '') +
+        (canEdit ? '<button type="button" class="btn btn--secondary" data-edit>' + ui.icon('edit') + ' Sửa</button>' : '') +
+        '<button type="button" class="btn btn--primary" data-close>Đóng</button>'
+    });
+    const editBtn = document.querySelector('#cm-modal [data-edit]');
+    if (editBtn) editBtn.addEventListener('click', function () { openEventForm(ev); });
+    const cancelBtn = document.querySelector('#cm-modal [data-cancel]');
+    if (cancelBtn) cancelBtn.addEventListener('click', async function () {
+      const ok = await ui.confirmModal({
+        title: 'Hủy sự kiện',
+        message: 'Bạn chắc chắn muốn hủy sự kiện "<strong>' + ui.escapeHtml(ev.title) + '</strong>" (' + ui.fmtDate(ev.date) + ')? Hành động này không thể hoàn tác.',
+        danger: true, okText: 'Hủy sự kiện'
+      });
+      if (!ok) return;
+      try {
+        await api.update('events', ev.id, { status: 'cancelled' });
+        ui.toast('Đã hủy sự kiện "' + ev.title + '".', 'success');
+        loadEvents(true);
+      } catch (e2) {
+        ui.toast(e2.message, 'error');
+      }
+    });
+  }
+
+  /* ---------- Modal: tạo / sửa sự kiện (dùng chung) ---------- */
+  function openEventForm(ev) {
+    const isEdit = !!ev;
+    const farmOptions = '<option value="">— Không —</option>' + farms.map(function (f) {
+      return '<option value="' + f.id + '"' + (isEdit && ev.relatedFarmId === f.id ? ' selected' : '') + '>' + ui.escapeHtml(f.name) + '</option>';
+    }).join('');
+    const defaultDate = isEdit ? ev.date : (state.ym ? state.ym + '-15' : ui.todayISO());
+
+    const bd = ui.openModal({
+      title: isEdit ? 'Sửa sự kiện' : 'Thêm sự kiện mới',
+      body:
+        '<form id="event-form" novalidate>' +
+          '<div class="field">' +
+            '<label class="field__label" for="ev-title">Tiêu đề <span class="req">*</span></label>' +
+            '<input class="input" id="ev-title" name="title" data-rules="required" value="' + (isEdit ? ui.escapeHtml(ev.title) : '') + '" placeholder="VD: Tập huấn kỹ thuật canh tác">' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="field">' +
+              '<label class="field__label" for="ev-date">Ngày <span class="req">*</span></label>' +
+              '<input class="input" type="date" id="ev-date" name="date" data-rules="required|date" value="' + defaultDate + '">' +
+              '<div class="field__error"></div>' +
+            '</div>' +
+            '<div class="field">' +
+              '<label class="field__label" for="ev-time">Giờ</label>' +
+              '<input class="input" type="time" id="ev-time" name="time" value="' + (isEdit && ev.time ? ui.escapeHtml(ev.time) : '') + '">' +
+              '<div class="field__error"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="field">' +
+              '<label class="field__label" for="ev-location">Địa điểm <span class="req">*</span></label>' +
+              '<input class="input" id="ev-location" name="location" data-rules="required" value="' + (isEdit ? ui.escapeHtml(ev.location) : '') + '" placeholder="VD: Trụ sở HTX Phú Hưng">' +
+              '<div class="field__error"></div>' +
+            '</div>' +
+            '<div class="field">' +
+              '<label class="field__label" for="ev-organizer">Đơn vị tổ chức <span class="req">*</span></label>' +
+              '<input class="input" id="ev-organizer" name="organizer" data-rules="required" value="' + (isEdit ? ui.escapeHtml(ev.organizer) : 'HTX Phú Hưng') + '">' +
+              '<div class="field__error"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field__label" for="ev-farm">Nông hộ liên quan</label>' +
+            '<select class="select" id="ev-farm" name="relatedFarmId">' + farmOptions + '</select>' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="field" style="margin-bottom:0">' +
+            '<label class="field__label" for="ev-note">Ghi chú</label>' +
+            '<textarea class="textarea" id="ev-note" name="note" placeholder="Ghi chú thêm nếu có...">' + (isEdit && ev.note ? ui.escapeHtml(ev.note) : '') + '</textarea>' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+        '</form>',
+      footer:
+        '<button type="button" class="btn btn--secondary" data-close>Đóng</button>' +
+        '<button type="button" class="btn btn--primary" data-save>' + (isEdit ? 'Lưu thay đổi' : 'Tạo sự kiện') + '</button>'
+    });
+
+    const form = bd.querySelector('#event-form');
+    ui.bindLiveValidation(form);
+
+    bd.querySelector('[data-save]').addEventListener('click', async function () {
+      if (!ui.validateForm(form)) return;
+      const v = ui.serializeForm(form);
+      const btn = this;
+      btn.disabled = true; btn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        if (isEdit) {
+          await api.update('events', ev.id, {
+            title: v.title.trim(), date: v.date, time: v.time || '',
+            location: v.location.trim(), organizer: v.organizer.trim(),
+            relatedFarmId: v.relatedFarmId || null, note: v.note.trim()
+          });
+          ui.toast('Đã cập nhật sự kiện "' + v.title.trim() + '".', 'success');
+        } else {
+          await api.create('events', {
+            title: v.title.trim(), date: v.date, time: v.time || '',
+            location: v.location.trim(), organizer: v.organizer.trim(),
+            relatedFarmId: v.relatedFarmId || null, note: v.note.trim(),
+            status: 'scheduled'
+          });
+          ui.toast('Đã thêm sự kiện "' + v.title.trim() + '".', 'success');
+          state.ym = v.date.slice(0, 7); /* nhảy tới tháng vừa tạo */
+        }
+        ui.closeModal();
+        loadEvents(true);
+      } catch (e) {
+        ui.toast(e.message, 'error');
+        btn.disabled = false; btn.innerHTML = isEdit ? 'Lưu thay đổi' : 'Tạo sự kiện';
+      }
+    });
+  }
+
+  /* ---------- Điều khiển chế độ & tháng ---------- */
+  document.querySelectorAll('.segmented__btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.segmented__btn').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      state.view = btn.getAttribute('data-view');
+      renderCalendar();
+    });
+  });
+
+  document.getElementById('month-picker').addEventListener('change', function () {
+    state.ym = this.value;
+    renderCalendar();
+  });
+
+  function shiftMonth(delta) {
+    const parts = state.ym.split('-');
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1 + delta, 1);
+    state.ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    buildMonthPicker();
+    renderCalendar();
+  }
+  document.getElementById('btn-prev').addEventListener('click', function () { shiftMonth(-1); });
+  document.getElementById('btn-next').addEventListener('click', function () { shiftMonth(1); });
+
+  btnAdd.addEventListener('click', function () { openEventForm(null); });
+
+  /* Boot */
+  loadEvents(false);
+});
+</script>
+</body>
+</html>

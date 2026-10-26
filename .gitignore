@@ -1,0 +1,16 @@
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.log
+
+# OBS videos (không đẩy video lên repo — chỉ để link trong Trello/README)
+*.mp4
+*.mkv
+
+# design/mockups có thể chứa ảnh lớn — giữ lại ảnh mô phỏng nhỏ, bỏ file nặng
+design/mockups/*.mov

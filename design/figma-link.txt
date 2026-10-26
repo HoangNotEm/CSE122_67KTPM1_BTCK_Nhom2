@@ -1,0 +1,20 @@
+LINK FIGMA CỦA NHÓM (mở được bằng link, không cần đăng nhập):
+
+- File mockup UI/UX:
+  https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup
+
+- Page 00 – Bìa & Design System:
+  https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=0-1
+
+- Page 01 – Desktop (21 màn hình):
+  https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=1-3269
+
+- Page 02 – AI states & Mobile:
+  https://www.figma.com/design/hb6zDXTpZwGPe6IQ00bCHX/CropMate-AI-%E2%80%93-UI-UX-Mockup?node-id=1-3270
+
+Bộ ảnh gốc: design/figma/screens/ — 30 ảnh PNG (21 màn hình + bìa & design system + 5 trạng thái AI + 2 mobile).
+Cách xem: mở link → panel Pages bên trái → chọn page tương ứng.
+
+SƠ ĐỒ BỔ TRỢ (SVG, mở bằng trình duyệt hoặc kéo thả vào Figma Page 00):
+- design/figma/sitemap.svg    — sitemap 21 màn hình theo 4 vai trò, số thứ tự khớp README.
+- design/figma/user-flow.svg  — user flow 7 bước + nhánh AI thất bại + quy ước trạng thái.

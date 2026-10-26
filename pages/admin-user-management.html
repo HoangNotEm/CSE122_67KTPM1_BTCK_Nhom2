@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý tài khoản – CropMate AI</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body data-role="admin" data-page="admin-user-management.html">
+<main id="main">
+
+  <div class="page-head">
+    <div class="page-head__text">
+      <h1>Quản lý tài khoản</h1>
+      <p>Tạo và quản lý tài khoản nông dân, chuyên gia, điều phối viên và quản trị viên.</p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--primary" id="btn-add-user"><span id="btn-add-user-icon"></span> Thêm tài khoản</button>
+    </div>
+  </div>
+
+  <!-- Bộ lọc -->
+  <div class="filter-bar">
+    <div class="filter-bar__search" id="search-wrap">
+      <input class="input" type="search" id="f-search" placeholder="Tìm theo tên, email hoặc số điện thoại..." aria-label="Tìm kiếm tài khoản">
+    </div>
+    <select class="select" id="f-role" aria-label="Lọc theo vai trò">
+      <option value="">Tất cả vai trò</option>
+      <option value="farmer">Nông dân</option>
+      <option value="expert">Chuyên gia</option>
+      <option value="coordinator">Điều phối HTX</option>
+      <option value="admin">Quản trị viên</option>
+    </select>
+    <select class="select" id="f-status" aria-label="Lọc theo trạng thái">
+      <option value="">Tất cả trạng thái</option>
+      <option value="active">Hoạt động</option>
+      <option value="locked">Đã khóa</option>
+    </select>
+    <span class="filter-bar__count" id="f-count">Đang tải...</span>
+  </div>
+
+  <!-- Bảng tài khoản -->
+  <section class="card card--pad-0" aria-labelledby="users-title">
+    <h2 id="users-title" style="position:absolute;left:-9999px;">Danh sách tài khoản</h2>
+    <div id="user-table">
+      <div class="card__body">
+        <div class="skeleton skeleton--line w-80"></div>
+        <div class="skeleton skeleton--line w-60"></div>
+        <div class="skeleton skeleton--line w-40"></div>
+        <div class="skeleton skeleton--line w-80"></div>
+      </div>
+    </div>
+    <div class="pagination" id="user-pagination" style="padding: 0 14px 14px;"></div>
+  </section>
+
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/modules/ui.js"></script>
+<script src="../js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const ui = CM.ui, api = CM.api;
+  const me = api.current();
+  if (!me) return;
+
+  const PAGE_SIZE = 7;
+  const ROLE_LABELS = { farmer: 'Nông dân', expert: 'Chuyên gia', coordinator: 'Điều phối HTX', admin: 'Quản trị viên' };
+  const state = { users: [], q: '', role: '', status: '', page: 1 };
+
+  /* ---------- Nạp dữ liệu ---------- */
+  async function loadData() {
+    const box = document.getElementById('user-table');
+    box.innerHTML = '<div class="card__body">' +
+      '<div class="skeleton skeleton--line w-80"></div><div class="skeleton skeleton--line w-60"></div>' +
+      '<div class="skeleton skeleton--line w-40"></div><div class="skeleton skeleton--line w-80"></div></div>';
+    try {
+      state.users = await api.list('users');
+      render();
+    } catch (e) {
+      box.innerHTML = '<div class="card__body">' + ui.errorState(e.message) + '</div>';
+      document.getElementById('user-pagination').innerHTML = '';
+      document.querySelectorAll('[data-retry]').forEach(function (b) { b.addEventListener('click', loadData); });
+    }
+  }
+
+  function filtered() {
+    const q = state.q.toLowerCase();
+    return state.users.filter(function (u) {
+      if (state.role && u.role !== state.role) return false;
+      if (state.status && u.status !== state.status) return false;
+      if (q) {
+        const hay = [(u.name || ''), (u.email || ''), (u.phone || '')].join(' ').toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+
+  /* ---------- Render bảng + phân trang ---------- */
+  function render() {
+    const box = document.getElementById('user-table');
+    const rows = filtered();
+    const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    if (state.page > pages) state.page = pages;
+
+    document.getElementById('f-count').textContent = rows.length + ' / ' + state.users.length + ' tài khoản';
+
+    if (!rows.length) {
+      box.innerHTML = state.users.length
+        ? ui.emptyState({
+            icon: 'search', title: 'Không tìm thấy tài khoản',
+            desc: 'Thử đổi từ khóa tìm kiếm hoặc bộ lọc vai trò, trạng thái.',
+            action: '<button type="button" class="btn btn--secondary" data-action="clear-filter">' + ui.icon('refresh') + ' Xóa bộ lọc</button>'
+          })
+        : ui.emptyState({
+            icon: 'users', title: 'Chưa có tài khoản nào',
+            desc: 'Thêm tài khoản đầu tiên để bắt đầu vận hành nền tảng.',
+            action: '<button type="button" class="btn btn--primary" data-action="add">' + ui.icon('plus') + ' Thêm tài khoản</button>'
+          });
+      document.getElementById('user-pagination').innerHTML = '';
+      return;
+    }
+
+    const pageRows = rows.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+    box.innerHTML = '<div class="table-wrap"><table class="table">' +
+      '<thead><tr><th>Người dùng</th><th>Vai trò</th><th>Số điện thoại</th><th>Khu vực</th><th>Ngày tham gia</th><th>Trạng thái</th><th>Hành động</th></tr></thead>' +
+      '<tbody>' + pageRows.map(function (u) {
+        const isSelf = u.id === me.id;
+        const loc = u.location || '—';
+        const locShort = loc.length > 40 ? loc.slice(0, 40) + '…' : loc;
+        let actions = '<button type="button" class="btn btn--ghost btn--sm" data-action="edit" data-id="' + u.id + '">' + ui.icon('edit') + ' Sửa</button>';
+        if (u.status === 'active') {
+          actions += ' <button type="button" class="btn btn--ghost btn--sm" data-action="lock" data-id="' + u.id + '">' + ui.icon('ban') + ' Khóa</button>';
+        } else {
+          actions += ' <button type="button" class="btn btn--ghost btn--sm" data-action="unlock" data-id="' + u.id + '">' + ui.icon('refresh') + ' Mở khóa</button>';
+        }
+        if (isSelf) {
+          actions += ' <button type="button" class="btn btn--danger-soft btn--sm" disabled title="Không thể xóa tài khoản đang đăng nhập">' + ui.icon('trash') + ' Xóa</button>';
+        } else {
+          actions += ' <button type="button" class="btn btn--danger-soft btn--sm" data-action="delete" data-id="' + u.id + '">' + ui.icon('trash') + ' Xóa</button>';
+        }
+        return '<tr>' +
+          '<td><span class="table-card-label">Người dùng</span><div class="row" style="gap:10px;flex-wrap:nowrap;"><span class="avatar" style="width:32px;height:32px;font-size:.74rem;flex:none;">' + ui.initials(u.name) + '</span><span><span class="cell-main">' + ui.escapeHtml(u.name) + (isSelf ? ' <span class="tag">Bạn</span>' : '') + '</span><br><span class="cell-sub">' + ui.escapeHtml(u.email) + '</span></span></div></td>' +
+          '<td><span class="table-card-label">Vai trò</span><span class="tag">' + ui.escapeHtml(ROLE_LABELS[u.role] || u.role) + '</span></td>' +
+          '<td><span class="table-card-label">Số điện thoại</span>' + ui.escapeHtml(u.phone || '—') + '</td>' +
+          '<td><span class="table-card-label">Khu vực</span><span class="small" title="' + ui.escapeHtml(loc) + '">' + ui.escapeHtml(locShort) + '</span></td>' +
+          '<td><span class="table-card-label">Ngày tham gia</span><span class="small muted">' + ui.fmtDate(u.joinedAt) + '</span></td>' +
+          '<td><span class="table-card-label">Trạng thái</span>' + ui.badge(u.status) + '</td>' +
+          '<td><span class="table-card-label">Hành động</span><div class="table__actions">' + actions + '</div></td>' +
+          '</tr>';
+      }).join('') + '</tbody></table></div>';
+
+    renderPagination(pages);
+  }
+
+  function renderPagination(pages) {
+    const el = document.getElementById('user-pagination');
+    let html = '<span class="small muted" style="margin-right:auto;align-self:center;">Trang ' + state.page + '/' + pages + '</span>';
+    if (pages > 1) {
+      html += '<button type="button" class="pagination__btn" data-page="prev" aria-label="Trang trước"' + (state.page === 1 ? ' disabled' : '') + '>‹</button>';
+      for (let i = 1; i <= pages; i++) {
+        html += '<button type="button" class="pagination__btn' + (i === state.page ? ' is-active' : '') + '" data-page="' + i + '">' + i + '</button>';
+      }
+      html += '<button type="button" class="pagination__btn" data-page="next" aria-label="Trang sau"' + (state.page === pages ? ' disabled' : '') + '>›</button>';
+    }
+    el.innerHTML = html;
+  }
+
+  document.getElementById('user-pagination').addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-page]');
+    if (!btn || btn.disabled) return;
+    const p = btn.getAttribute('data-page');
+    if (p === 'prev') state.page--;
+    else if (p === 'next') state.page++;
+    else state.page = parseInt(p, 10);
+    render();
+    document.getElementById('user-table').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  /* ---------- Hành động ---------- */
+  function hasBusinessData(userId) {
+    return api.read('farms').some(function (f) { return f.ownerId === userId; }) ||
+           api.read('helpRequests').some(function (r) { return r.farmerId === userId; });
+  }
+
+  document.getElementById('user-table').addEventListener('click', async function (e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    if (action === 'add') { openUserModal(null); return; }
+    if (action === 'clear-filter') {
+      /* Đưa bộ lọc và phân trang về mặc định */
+      state.q = ''; state.role = ''; state.status = ''; state.page = 1;
+      document.getElementById('f-search').value = '';
+      document.getElementById('f-role').value = '';
+      document.getElementById('f-status').value = '';
+      render();
+      document.getElementById('f-search').focus();
+      return;
+    }
+    const id = btn.getAttribute('data-id');
+    const user = state.users.find(function (u) { return u.id === id; });
+    if (!user) return;
+
+    if (action === 'edit') { openUserModal(user); return; }
+
+    if (action === 'lock') {
+      const ok = await ui.confirmModal({
+        title: 'Khóa tài khoản',
+        message: 'Khóa tài khoản "' + ui.escapeHtml(user.name) + '"? Người dùng sẽ không thể đăng nhập vào hệ thống.',
+        okText: 'Khóa', danger: true
+      });
+      if (!ok) return;
+      try {
+        await api.update('users', id, { status: 'locked' });
+        ui.toast('Đã khóa tài khoản "' + ui.escapeHtml(user.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+      return;
+    }
+
+    if (action === 'unlock') {
+      try {
+        await api.update('users', id, { status: 'active' });
+        ui.toast('Đã mở khóa tài khoản "' + ui.escapeHtml(user.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+      return;
+    }
+
+    if (action === 'delete') {
+      if (hasBusinessData(id)) {
+        ui.toast('Tài khoản còn dữ liệu nghiệp vụ — nên Khóa thay vì Xóa.', 'warning');
+        return;
+      }
+      const ok = await ui.confirmModal({
+        title: 'Xóa tài khoản',
+        message: 'Xóa vĩnh viễn tài khoản "' + ui.escapeHtml(user.name) + '" (' + ui.escapeHtml(user.email) + ')? Hành động này không thể hoàn tác.',
+        okText: 'Xóa', danger: true
+      });
+      if (!ok) return;
+      try {
+        await api.remove('users', id);
+        ui.toast('Đã xóa tài khoản "' + ui.escapeHtml(user.name) + '".', 'success');
+        loadData();
+      } catch (err) { ui.toast(err.message, 'error'); }
+    }
+  });
+
+  /* ---------- Modal tạo / sửa ---------- */
+  function openUserModal(user) {
+    const isEdit = !!user;
+    const roleOptions = Object.keys(ROLE_LABELS).map(function (r) {
+      const sel = user && user.role === r ? ' selected' : '';
+      return '<option value="' + r + '"' + sel + '>' + ROLE_LABELS[r] + '</option>';
+    }).join('');
+
+    const bd = ui.openModal({
+      title: isEdit ? 'Sửa tài khoản' : 'Thêm tài khoản',
+      body:
+        '<form id="user-form" novalidate>' +
+        '<div class="field">' +
+          '<label class="field__label" for="uf-name">Họ tên <span class="req">*</span></label>' +
+          '<input class="input" id="uf-name" name="name" data-rules="required" value="' + ui.escapeHtml(user ? user.name : '') + '" placeholder="VD: Nguyễn Văn Hùng">' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="uf-email">Email <span class="req">*</span></label>' +
+          '<input class="input" id="uf-email" name="email" type="email" data-rules="required|email" value="' + ui.escapeHtml(user ? user.email : '') + '" placeholder="nguoidung@example.com"' + (isEdit ? ' disabled' : '') + '>' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<div class="field" id="field-phone">' +
+            '<label class="field__label" for="uf-phone">Số điện thoại</label>' +
+            '<input class="input" id="uf-phone" name="phone" value="' + ui.escapeHtml(user ? user.phone : '') + '" placeholder="0901 234 567">' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field__label" for="uf-role">Vai trò <span class="req">*</span></label>' +
+            '<select class="select" id="uf-role" name="role" data-rules="required">' +
+              '<option value="">— Chọn vai trò —</option>' + roleOptions +
+            '</select>' +
+            '<div class="field__error"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field__label" for="uf-location">Khu vực</label>' +
+          '<input class="input" id="uf-location" name="location" value="' + ui.escapeHtml(user ? user.location : '') + '" placeholder="Xã..., huyện..., tỉnh...">' +
+          '<div class="field__error"></div>' +
+        '</div>' +
+        '</form>',
+      footer:
+        '<button type="button" class="btn btn--secondary" data-close>Hủy</button>' +
+        '<button type="submit" form="user-form" class="btn btn--primary" id="uf-save">' + (isEdit ? 'Lưu thay đổi' : 'Thêm tài khoản') + '</button>'
+    });
+
+    const form = bd.querySelector('#user-form');
+    ui.bindLiveValidation(form);
+
+    const phoneEl = bd.querySelector('#uf-phone');
+    phoneEl.addEventListener('input', function () {
+      const f = phoneEl.closest('.field');
+      f.classList.remove('has-error');
+      f.querySelector('.field__error').textContent = '';
+    });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!ui.validateForm(form)) return;
+      /* SĐT tùy chọn — chỉ kiểm định dạng khi có nhập */
+      if (phoneEl.value.trim() && !/^(0|\+84)[\s.\d]{8,12}$/.test(phoneEl.value.trim())) {
+        const f = phoneEl.closest('.field');
+        f.classList.add('has-error');
+        f.querySelector('.field__error').textContent = 'Số điện thoại không hợp lệ (VD: 0901 234 567).';
+        phoneEl.focus();
+        return;
+      }
+      const data = ui.serializeForm(form);
+      const saveBtn = bd.querySelector('#uf-save');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="btn__spinner"></span> Đang lưu...';
+      try {
+        if (isEdit) {
+          await api.update('users', user.id, {
+            name: data.name.trim(),
+            phone: data.phone.trim(),
+            location: data.location.trim(),
+            role: data.role
+          });
+          ui.toast('Đã cập nhật tài khoản "' + ui.escapeHtml(data.name.trim()) + '".', 'success');
+        } else {
+          await api.create('users', {
+            name: data.name.trim(),
+            email: data.email.trim(),
+            phone: data.phone.trim(),
+            location: data.location.trim(),
+            role: data.role,
+            status: 'active',
+            joinedAt: ui.todayISO()
+          });
+          ui.toast('Đã thêm tài khoản "' + ui.escapeHtml(data.name.trim()) + '".', 'success');
+        }
+        ui.closeModal();
+        loadData();
+      } catch (err) {
+        ui.toast(err.message, 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = isEdit ? 'Lưu thay đổi' : 'Thêm tài khoản';
+      }
+    });
+  }
+
+  /* ---------- Bộ lọc ---------- */
+  document.getElementById('search-wrap').insertAdjacentHTML('afterbegin', ui.icon('search'));
+  document.getElementById('f-search').addEventListener('input', ui.debounce(function () {
+    state.q = this.value.trim();
+    state.page = 1;
+    render();
+  }, 250));
+  document.getElementById('f-role').addEventListener('change', function () {
+    state.role = this.value;
+    state.page = 1;
+    render();
+  });
+  document.getElementById('f-status').addEventListener('change', function () {
+    state.status = this.value;
+    state.page = 1;
+    render();
+  });
+
+  /* Boot */
+  document.getElementById('btn-add-user-icon').innerHTML = ui.icon('plus');
+  document.getElementById('btn-add-user').addEventListener('click', function () { openUserModal(null); });
+  loadData();
+});
+</script>
+</body>
+</html>
