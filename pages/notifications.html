@@ -185,7 +185,11 @@ document.addEventListener('DOMContentLoaded', function () {
     render();
     try {
       await Promise.all(unread.map(function (n) { return api.update('notifications', n.id, { read: true }); }));
+<<<<<<< HEAD
       ui.toast('Đã đánh dấu đọc tất cả thông báo.', 'success');
+=======
+      ui.toast('Đã cập nhật tất cả thông báo thành đã đọc.', 'success');
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
     } catch (e) {
       ui.toast('Có lỗi khi cập nhật, đang tải lại danh sách...', 'error');
       load();

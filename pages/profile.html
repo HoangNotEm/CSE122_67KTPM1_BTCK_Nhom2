@@ -72,9 +72,12 @@
               <div class="field__error"></div>
             </div>
           </div>
+<<<<<<< HEAD
           <label class="small" style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
   <input type="checkbox" id="show-pw"> Hiện mật khẩu
 </label>
+=======
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
           <div class="row">
             <button type="submit" class="btn btn--primary" id="btn-save-pw">Đổi mật khẩu</button>
             <span class="small muted">Mô phỏng — mật khẩu không được lưu lại.</span>
@@ -176,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const pwForm = document.getElementById('password-form');
   const pwNew = document.getElementById('pw-new');
   const pwConfirm = document.getElementById('pw-confirm');
+<<<<<<< HEAD
   const showPw = document.getElementById('show-pw');
 function applyPwType() {
   const type = showPw.checked ? 'text' : 'password';
@@ -184,6 +188,8 @@ function applyPwType() {
   pwConfirm.type = type;
 }
 showPw.addEventListener('change', applyPwType);
+=======
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
   ui.bindLiveValidation(pwForm);
   /* Validate lại độ khớp khi gõ tiếp */
   pwConfirm.addEventListener('input', function () {
@@ -201,7 +207,10 @@ showPw.addEventListener('change', applyPwType);
     if (!ok) { ui.toast('Vui lòng kiểm tra lại mật khẩu.', 'error'); return; }
     ui.toast('Đổi mật khẩu thành công (mô phỏng — không lưu lại)!', 'success');
     pwForm.reset();
+<<<<<<< HEAD
     applyPwType();
+=======
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
   });
 });
 </script>

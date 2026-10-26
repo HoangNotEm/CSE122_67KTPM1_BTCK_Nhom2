@@ -13,7 +13,11 @@ Sản phẩm giải quyết 4 vấn đề thực tế của nông hộ nhỏ: **
 |---|---|---|---|
 | SV1 | Lương Hoàng Anh – 2551170848 | Nông dân + auth/notifications | Design system, điều hướng, khả năng tiếp cận |
 | SV2 | Nguyễn Duy Chinh - 2551170866 | Chuyên gia + tài khoản | JavaScript, dữ liệu giả lập, 3 tính năng AI |
+<<<<<<< HEAD
 | SV3 | _(điền họ tên – MSSV)_ | Điều phối HTX + Quản trị + hệ thống | Responsive, tích hợp, phát hành, QA |
+=======
+| SV3 | Trần Mạnh Quỳnh - 2551170940 | Điều phối HTX + Quản trị + hệ thống | Responsive, tích hợp, phát hành, QA |
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
 
 ## Bản chạy thử (live demo)
 
@@ -62,6 +66,7 @@ Bảng đầy đủ 12 cột (mục tiêu, nhiệm vụ, CRUD, trạng thái, AI
 | # | Tệp | Vai trò | AI | Task ID | Video OBS |
 |---:|---|---|---|---|---|
 | 1 | `index.html` | Dùng chung | – | TASK-08 | `SV3-01-index.mp4` |
+<<<<<<< HEAD
 | 2 | `pages/login.html` | Dùng chung | – | TASK-08 | `SV1-01-login.mp4` |
 | 3 | `pages/register.html` | Dùng chung | – | TASK-08 | `SV1-02-register.mp4` |
 | 4 | `pages/forgot-password.html` | Dùng chung | – | TASK-08 | `SV2-04-forgot-password.mp4` |
@@ -71,6 +76,17 @@ Bảng đầy đủ 12 cột (mục tiêu, nhiệm vụ, CRUD, trạng thái, AI
 | 8 | `pages/403.html` | Dùng chung | – | TASK-22 | `SV3-02-403.mp4` |
 | 9 | `pages/404.html` | Dùng chung | – | TASK-22 | `SV3-03-404.mp4` |
 | 10 | `pages/farmer-season-dashboard.html` | Nông dân | **AI-2** Checklist Generator | TASK-05 | `SV1-04-farmer-season-dashboard.mp4` |
+=======
+| 2 | `pages/login.html` | Dùng chung | – | TASK-08 | [SV1-01-login.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-01-login.mp4) |
+| 3 | `pages/register.html` | Dùng chung | – | TASK-08 | [SV1-02-register.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-02-register.mp4) |
+| 4 | `pages/forgot-password.html` | Dùng chung | – | TASK-08 | `SV2-04-forgot-password.mp4` |
+| 5 | `pages/profile.html` | Dùng chung | – | TASK-22 | `SV2-05-profile.mp4` |
+| 6 | `pages/settings.html` | Dùng chung | – | TASK-22 | `SV2-06-settings.mp4` |
+| 7 | `pages/notifications.html` | Dùng chung | – | TASK-22 | [SV1-03-notifications.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-03-notifications.mp4) |
+| 8 | `pages/403.html` | Dùng chung | – | TASK-22 | `SV3-02-403.mp4` |
+| 9 | `pages/404.html` | Dùng chung | – | TASK-22 | `SV3-03-404.mp4` |
+| 10 | `pages/farmer-season-dashboard.html` | Nông dân | **AI-2** Checklist Generator | TASK-05 | [SV1-04-farmer-season-dashboard.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-04-farmer-season-dashboard.mp4) |
+>>>>>>> 1510677385c45d048cf244b7da7b8ff7118d79d5
 | 11 | `pages/farmer-field-log.html` | Nông dân | – | TASK-06 | `SV1-05-farmer-field-log.mp4` |
 | 12 | `pages/farmer-help-request.html` | Nông dân | **AI-1** Issue Classifier | TASK-07 | `SV1-06-farmer-help-request.mp4` |
 | 13 | `pages/expert-request-queue.html` | Chuyên gia | – | TASK-10 | `SV2-01-expert-request-queue.mp4` |
