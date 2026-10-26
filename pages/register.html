@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* Rule tự viết: mật khẩu >= 6 ký tự, xác nhận khớp, checkbox đồng ý */
     let ok = ui.validateForm(form);
-    ok = setFieldError(password, password.value.length >= 6 ? '' : 'Mật khẩu cần ít nhất 6 ký tự.') && ok;
+    ok = setFieldError(password, password.value.length >= 6 ? '' : 'Mật khẩu phải có tối thiểu 6 ký tự.') && ok;
     ok = setFieldError(confirm, confirm.value === password.value ? '' : 'Mật khẩu xác nhận không khớp.') && ok;
     ok = validateAgree() && ok;
 
