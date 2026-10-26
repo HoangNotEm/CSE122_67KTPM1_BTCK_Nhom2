@@ -64,9 +64,9 @@ Bảng đầy đủ 12 cột (mục tiêu, nhiệm vụ, CRUD, trạng thái, AI
 | 1 | `index.html` | Dùng chung | – | TASK-08 | `SV3-01-index.mp4` |
 | 2 | `pages/login.html` | Dùng chung | – | TASK-08 | [SV1-01-login.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-01-login.mp4) |
 | 3 | `pages/register.html` | Dùng chung | – | TASK-08 | [SV1-02-register.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-02-register.mp4) |
-| 4 | `pages/forgot-password.html` | Dùng chung | – | TASK-08 | `SV2-04-forgot-password.mp4` |
-| 5 | `pages/profile.html` | Dùng chung | – | TASK-22 | `SV2-05-profile.mp4` |
-| 6 | `pages/settings.html` | Dùng chung | – | TASK-22 | `SV2-06-settings.mp4` |
+| 4 | `pages/forgot-password.html` | Dùng chung | – | TASK-08 | [SV2-04-forgot-password.mp4]https://youtu.be/JkDr4bPjfCQ?si=nkakUVux2SFOtD1_ |
+| 5 | `pages/profile.html` | Dùng chung | – | TASK-22 | [SV2-05-profile.mp4]https://youtu.be/esZeZu1hxc4?si=VNlN2ZC11QyTDx7Z |
+| 6 | `pages/settings.html` | Dùng chung | – | TASK-22 | [SV2-06-settings.mp4]https://youtu.be/8_nCXK4uqIY?si=NTTS_CtS8omUvU6b |
 | 7 | `pages/notifications.html` | Dùng chung | – | TASK-22 | [SV1-03-notifications.mp4](https://github.com/HoangNotEm/CSE122_67KTPM1_BTCK_Nhom2/releases/download/obs-sv1/SV1-03-notifications.mp4) |
 | 8 | `pages/403.html` | Dùng chung | – | TASK-22 | `SV3-02-403.mp4` |
 | 9 | `pages/404.html` | Dùng chung | – | TASK-22 | `SV3-03-404.mp4` |
